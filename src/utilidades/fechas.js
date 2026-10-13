@@ -23,3 +23,71 @@ export function formatearFechaHora(valor) {
   if (Number.isNaN(fecha.getTime())) return null
   return espaciosNormales(`${formatoFecha.format(fecha)}, ${formatoHora.format(fecha)}`)
 }
+
+const formatoDiaIso = new Intl.DateTimeFormat('en-CA', {
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  timeZone: ZONA_COLOMBIA,
+})
+
+// Fecha de hoy en Colombia como "AAAA-MM-DD".
+export function fechaHoyColombia(ahora = new Date()) {
+  return formatoDiaIso.format(ahora)
+}
+
+const formatoDiaDeHoy = new Intl.DateTimeFormat('es-CO', {
+  weekday: 'long',
+  day: 'numeric',
+  month: 'long',
+  timeZone: ZONA_COLOMBIA,
+})
+
+// "martes, 13 de octubre" en hora de Colombia.
+export function formatearDiaDeHoy(ahora = new Date()) {
+  return formatoDiaDeHoy.format(ahora)
+}
+
+// Una fecha "AAAA-MM-DD" ya es un día de Colombia: se lee en UTC para no correrla.
+function diaCalendario(fechaIso) {
+  const [anio, mes, dia] = fechaIso.split('-').map(Number)
+  return new Date(Date.UTC(anio, mes - 1, dia))
+}
+
+const LETRAS_DIA = ['D', 'L', 'M', 'X', 'J', 'V', 'S']
+
+// "2026-10-13" → "M"
+export function letraDelDia(fechaIso) {
+  return LETRAS_DIA[diaCalendario(fechaIso).getUTCDay()]
+}
+
+const formatoNombreDia = new Intl.DateTimeFormat('es-CO', {
+  weekday: 'long',
+  day: 'numeric',
+  month: 'long',
+  timeZone: 'UTC',
+})
+
+// "2026-10-13" → "martes, 13 de octubre"
+export function nombreDelDia(fechaIso) {
+  return formatoNombreDia.format(diaCalendario(fechaIso))
+}
+
+const formatoRelativo = new Intl.RelativeTimeFormat('es', { numeric: 'always' })
+
+const UNIDADES = [
+  ['year', 365 * 24 * 60 * 60],
+  ['month', 30 * 24 * 60 * 60],
+  ['day', 24 * 60 * 60],
+  ['hour', 60 * 60],
+  ['minute', 60],
+]
+
+// "hace 2 horas", "hace 3 días"…
+export function tiempoRelativo(valor, ahora = Date.now()) {
+  const segundos = Math.max(0, Math.round((ahora - new Date(valor).getTime()) / 1000))
+  for (const [unidad, tamano] of UNIDADES) {
+    if (segundos >= tamano) return formatoRelativo.format(-Math.floor(segundos / tamano), unidad)
+  }
+  return formatoRelativo.format(-segundos, 'second')
+}

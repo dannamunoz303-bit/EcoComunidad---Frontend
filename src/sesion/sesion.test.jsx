@@ -1,50 +1,7 @@
-import { act, fireEvent, render, screen } from '@testing-library/react'
-import { AxiosError } from 'axios'
-import { MemoryRouter } from 'react-router-dom'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
-import cliente from '../api/cliente.js'
+import { act, fireEvent, screen } from '@testing-library/react'
+import { beforeEach, describe, expect, it } from 'vitest'
 import { guardarSesion, leerAccess, leerRefresh } from '../api/sesion.js'
-import App from '../App.jsx'
-import ProveedorSesion from './ProveedorSesion.jsx'
-
-// ---- API simulada: el adaptador de axios responde sin llamar al backend ----
-
-const ADMIN = { id: 1, nombre: 'Laura', apellido: 'Gómez', correo: 'laura@eco.co', rol: 'administrador' }
-
-function responder(config, status, data = {}) {
-  const respuesta = { data, status, statusText: '', headers: {}, config }
-  if (status >= 200 && status < 300) return Promise.resolve(respuesta)
-  return Promise.reject(new AxiosError(`Error ${status}`, AxiosError.ERR_BAD_RESPONSE, config, null, respuesta))
-}
-
-const sinConexion = (config) => Promise.reject(new AxiosError('Network Error', AxiosError.ERR_NETWORK, config, {}))
-
-// rutas: { 'POST /auth/login/': (config) => Promise, ... }
-function simularApi(rutas) {
-  const adaptador = vi.fn((config) => {
-    const clave = `${config.method.toUpperCase()} ${config.url}`
-    const manejador = rutas[clave]
-    if (!manejador) return responder(config, 404, { detail: `Sin simular: ${clave}` })
-    return manejador(config)
-  })
-  cliente.defaults.adapter = adaptador
-  return adaptador
-}
-
-const loginCorrecto = (usuario = ADMIN) => ({
-  'POST /auth/login/': (c) => responder(c, 200, { access: 'acc-1', refresh: 'ref-1' }),
-  'GET /auth/yo/': (c) => responder(c, 200, usuario),
-})
-
-function montar(ruta = '/') {
-  return render(
-    <MemoryRouter initialEntries={[ruta]}>
-      <ProveedorSesion>
-        <App />
-      </ProveedorSesion>
-    </MemoryRouter>,
-  )
-}
+import { ADMIN, loginCorrecto, montar, responder, simularApi, sinConexion } from '../pruebas/apiSimulada.jsx'
 
 async function ingresar(correo = 'laura@eco.co', password = 'clave-segura-1') {
   fireEvent.change(await screen.findByLabelText('Correo'), { target: { value: correo } })

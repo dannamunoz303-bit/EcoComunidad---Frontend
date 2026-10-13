@@ -40,7 +40,7 @@ export default function DisenoPanel() {
           <ul className="barra-lateral__lista">
             {SECCIONES.map(({ ruta, titulo, icono: Icono }) => (
               <li key={ruta}>
-                <NavLink to={ruta} end className="barra-lateral__enlace" onClick={cerrarMenu}>
+                <NavLink to={ruta} end={ruta === '/'} className="barra-lateral__enlace" onClick={cerrarMenu}>
                   <Icono size={20} aria-hidden="true" />
                   {titulo}
                 </NavLink>

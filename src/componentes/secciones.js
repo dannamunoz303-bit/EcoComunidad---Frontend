@@ -23,6 +23,11 @@ export const SECCIONES = [
   { ruta: '/notificaciones', titulo: 'Notificaciones', icono: Bell },
 ]
 
+// "/reportes/12" pertenece a Reportes.
 export function seccionDeRuta(ruta) {
-  return SECCIONES.find((seccion) => seccion.ruta === ruta) ?? null
+  return (
+    SECCIONES.find(
+      (seccion) => seccion.ruta === ruta || (seccion.ruta !== '/' && ruta.startsWith(`${seccion.ruta}/`)),
+    ) ?? null
+  )
 }

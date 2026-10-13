@@ -24,6 +24,8 @@ export default function App() {
           {SECCIONES.filter(({ ruta }) => ruta !== '/').map(({ ruta }) => (
             <Route key={ruta} path={ruta} element={<PaginaPronto />} />
           ))}
+          {/* Detalle de un reporte: llega en un paso posterior */}
+          <Route path="/reportes/:id" element={<PaginaPronto />} />
         </Route>
       </Route>
 
