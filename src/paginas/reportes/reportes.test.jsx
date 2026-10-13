@@ -223,6 +223,36 @@ describe('Lista de reportes', () => {
     expect(await tabla()).toBeInTheDocument()
   })
 
+  it('?ciudadano=<id> filtra por ese ciudadano y el chip se puede quitar', async () => {
+    const otro = { id: 31, nombre: 'Luis', apellido: 'Torres' }
+    const conOtro = REPORTES.map((r) => (r.id === 2 || r.id === 5 ? { ...r, ciudadano: otro } : r))
+    abrir('/reportes?ciudadano=31&estado=aprobado', {
+      'GET /reportes/': (c) => responder(c, 200, conOtro),
+      'GET /usuarios/31/': (c) => responder(c, 200, { ...otro, rol: 'ciudadano' }),
+    })
+    await tabla()
+
+    expect(titulosVisibles()).toEqual(['Árbol caído en la avenida'])
+    expect(botonEstado('Todos')).toHaveTextContent('2')
+    const chip = screen.getByText('Reportes de Luis Torres')
+    expect(chip).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Quitar el filtro: reportes de Luis Torres' }))
+
+    expect(urlActual()).toBe('/reportes?estado=aprobado')
+    expect(screen.queryByText('Reportes de Luis Torres')).not.toBeInTheDocument()
+    expect(botonEstado('Todos')).toHaveTextContent('5')
+  })
+
+  it('el chip toma el nombre del usuario si el ciudadano no tiene reportes', async () => {
+    abrir('/reportes?ciudadano=99', {
+      'GET /usuarios/99/': (c) => responder(c, 200, { id: 99, nombre: 'Rosa', apellido: 'Mora', rol: 'ciudadano' }),
+    })
+
+    expect(await screen.findByText('Reportes de Rosa Mora')).toBeInTheDocument()
+    expect(screen.getByText('No encontramos reportes con esos filtros. Prueba con otros.')).toBeInTheDocument()
+  })
+
   it('el detalle vuelve a la lista con los mismos filtros', async () => {
     abrir('/reportes?estado=pendiente', {
       'GET /reportes/1/': (c) => responder(c, 200, REPORTES[0]),

@@ -1,0 +1,232 @@
+/* Lista de usuarios */
+.usuarios__cabecera {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-3);
+}
+
+.usuarios__panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--espacio-5);
+}
+
+.usuarios__panel > * {
+  min-width: 0;
+}
+
+.pestanas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espacio-1);
+  border-bottom: 1px solid var(--borde);
+}
+
+.pestana {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espacio-2);
+  min-height: 44px;
+  margin-bottom: -1px;
+  padding: var(--espacio-2) var(--espacio-4);
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: transparent;
+  color: var(--tinta-suave);
+  font-weight: 600;
+}
+
+.pestana:hover {
+  color: var(--tinta);
+}
+
+.pestana[aria-selected='true'] {
+  border-bottom-color: var(--verde-bosque);
+  color: var(--verde-bosque);
+}
+
+.filtro-estado--sin-cantidad {
+  padding-right: var(--espacio-4);
+}
+
+.tabla-usuarios__correo {
+  overflow-wrap: anywhere;
+}
+
+/* Formulario de usuario */
+.formulario-usuario {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--espacio-5);
+  max-width: 760px;
+}
+
+.formulario-usuario__fila {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--espacio-4);
+}
+
+.opciones-rol {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--espacio-3);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.opciones-rol legend {
+  margin-bottom: var(--espacio-2);
+  padding: 0;
+  font-weight: 600;
+  font-size: 0.9375rem;
+}
+
+.opcion-rol {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-3);
+  padding: var(--espacio-3) var(--espacio-4);
+  border: 1px solid var(--borde);
+  border-radius: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.opcion-rol:has(input:checked) {
+  border-color: var(--verde-bosque);
+  box-shadow: inset 0 0 0 1px var(--verde-bosque);
+  background: color-mix(in srgb, var(--verde-bosque) 6%, var(--superficie));
+}
+
+.opcion-rol:has(input:focus-visible) {
+  outline: 3px solid var(--foco);
+  outline-offset: 2px;
+}
+
+.opcion-rol input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--verde-bosque);
+}
+
+.opcion-rol input:focus-visible {
+  outline: none;
+}
+
+.campo__opcional {
+  color: var(--tinta-suave);
+  font-weight: 400;
+}
+
+.contrasena__botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espacio-2);
+}
+
+.contrasena__botones .boton-secundario {
+  min-height: 38px;
+  padding: var(--espacio-1) var(--espacio-4);
+  font-size: 0.9375rem;
+}
+
+.contrasena__input {
+  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  letter-spacing: 0.02em;
+}
+
+.reglas-contrasena {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding-left: var(--espacio-5);
+  color: var(--tinta-suave);
+  font-size: 0.875rem;
+}
+
+.formulario-usuario__pie {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--espacio-3);
+}
+
+.nota-fija {
+  margin: 0;
+  padding: var(--espacio-3) var(--espacio-4);
+  border-radius: var(--radio-campo);
+  background: var(--fondo);
+  color: var(--tinta);
+  font-size: 0.9375rem;
+}
+
+/* Diálogo "Usuario creado" */
+.datos-creados {
+  display: grid;
+  gap: var(--espacio-3);
+  margin: 0;
+  padding: var(--espacio-4);
+  border: 1px solid var(--borde);
+  border-radius: 14px;
+  background: var(--fondo);
+}
+
+.datos-creados dt {
+  color: var(--tinta-suave);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.datos-creados dd {
+  margin: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.datos-creados__contrasena {
+  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  font-size: 1.0625rem;
+}
+
+/* Detalle del usuario */
+.usuario__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espacio-3);
+}
+
+.usuario__enlaces {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espacio-4);
+}
+
+.usuario__enlaces a {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espacio-2);
+  font-weight: 600;
+}
+
+.aviso-tareas-activas {
+  font-weight: 600;
+}
+
+/* El detalle del usuario es una sola columna (sin las áreas del detalle de reportes) */
+.usuario-detalle {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--espacio-5);
+  max-width: 880px;
+}
+
+.usuario-detalle > * {
+  grid-area: auto;
+  min-width: 0;
+}

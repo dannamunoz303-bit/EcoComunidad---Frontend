@@ -114,3 +114,14 @@ export function formatearFechaCorta(valor) {
   const mes = partes.month.endsWith('.') ? partes.month : `${partes.month}.`
   return `${partes.day} ${mes} ${partes.year}`
 }
+
+// "15 oct. 2026, 3:00 p. m." en hora de Colombia.
+export function formatearFechaHoraCorta(valor) {
+  const fecha = new Date(valor)
+  if (Number.isNaN(fecha.getTime())) return null
+  const hora = espaciosNormales(formatoHora.format(fecha)).replace(
+    PERIODO_DEL_DIA,
+    `${NO_SEPARABLE}$1${NO_SEPARABLE}$2`,
+  )
+  return `${formatearFechaCorta(fecha)}, ${hora}`
+}

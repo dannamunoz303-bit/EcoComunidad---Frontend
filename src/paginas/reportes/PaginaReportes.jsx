@@ -1,8 +1,9 @@
-import { RefreshCw } from 'lucide-react'
+import { RefreshCw, X } from 'lucide-react'
 import { useCallback, useMemo } from 'react'
 import { useLocation, useSearchParams } from 'react-router-dom'
 import { listarCategorias } from '../../api/categorias.js'
 import { listarReportes } from '../../api/reportes.js'
+import { obtenerUsuario } from '../../api/usuarios.js'
 import Brotico from '../../marca/Brotico.jsx'
 import { useCarga } from '../../utilidades/useCarga.js'
 import FiltrosReportes from './FiltrosReportes.jsx'
@@ -10,7 +11,7 @@ import { contarPorEstado, filtrarBase, hayFiltros, leerFiltros, ordenarRecientes
 import TablaReportes from './TablaReportes.jsx'
 import './reportes.css'
 
-const PARAMETROS = { estado: 'estado', categoria: 'categoria', q: 'q', eliminados: 'eliminados' }
+const PARAMETROS = { estado: 'estado', categoria: 'categoria', q: 'q', eliminados: 'eliminados', ciudadano: 'ciudadano' }
 
 function SiluetasFilas() {
   return (
@@ -54,6 +55,20 @@ export default function PaginaReportes() {
   )
 
   const quitarFiltros = () => setParams(new URLSearchParams())
+
+  // Nombre del ciudadano para el chip: de sus reportes o, si no tiene, de /usuarios/<id>/.
+  const deLosReportes = filtros.ciudadano
+    ? reportes.datos?.find((r) => String(r.ciudadano?.id) === filtros.ciudadano)?.ciudadano
+    : null
+  const cargarCiudadano = useCallback(
+    () => (filtros.ciudadano ? obtenerUsuario(filtros.ciudadano) : Promise.resolve(null)),
+    [filtros.ciudadano],
+  )
+  const ciudadano = useCarga(cargarCiudadano)
+  const personaFiltro = deLosReportes ?? ciudadano.datos
+  const nombreFiltro = personaFiltro
+    ? `${personaFiltro.nombre} ${personaFiltro.apellido}`
+    : `el ciudadano #${filtros.ciudadano}`
 
   const { visibles, conteo } = useMemo(() => {
     if (!reportes.datos) return { visibles: [], conteo: {} }
@@ -103,6 +118,20 @@ export default function PaginaReportes() {
           ? 'Cargando reportes…'
           : `${visibles.length} ${visibles.length === 1 ? 'reporte' : 'reportes'}`}
       </p>
+
+      {filtros.ciudadano && (
+        <p className="chip-filtro">
+          Reportes de {nombreFiltro}
+          <button
+            type="button"
+            className="chip-filtro__quitar"
+            aria-label={`Quitar el filtro: reportes de ${nombreFiltro}`}
+            onClick={() => alCambiar({ ciudadano: '' })}
+          >
+            <X size={16} aria-hidden="true" />
+          </button>
+        </p>
+      )}
 
       <FiltrosReportes
         filtros={filtros}

@@ -3,6 +3,7 @@ import { lazy, Suspense, useCallback, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { erroresPorCampo, mensajeDeError } from '../../../api/errores.js'
 import { editarReporte } from '../../../api/reportes.js'
+import Campo from '../../../componentes/Campo.jsx'
 import { useEnvio } from '../acciones/useEnvio.js'
 import { conOchoDecimales, leerCoordenada } from './coordenadas.js'
 
@@ -39,28 +40,6 @@ function camposCambiados(original, actual) {
     cambios[campo] = campo === 'categoria' ? Number(actual[campo]) : actual[campo]
   }
   return cambios
-}
-
-function Campo({ id, etiqueta, error, ayuda, children }) {
-  const idError = `${id}-error`
-  const idAyuda = `${id}-ayuda`
-  const describe = [ayuda && idAyuda, error && idError].filter(Boolean).join(' ') || undefined
-  return (
-    <div className="campo">
-      <label htmlFor={id}>{etiqueta}</label>
-      {children({ 'aria-invalid': error ? 'true' : undefined, 'aria-describedby': describe })}
-      {ayuda && (
-        <span id={idAyuda} className="campo__ayuda">
-          {ayuda}
-        </span>
-      )}
-      {error && (
-        <p id={idError} className="campo__error">
-          {error}
-        </p>
-      )}
-    </div>
-  )
 }
 
 const COORDENADAS = ['latitud', 'longitud']

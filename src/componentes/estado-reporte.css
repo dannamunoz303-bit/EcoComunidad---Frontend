@@ -74,6 +74,27 @@
   background: var(--fondo);
 }
 
+/* Estados del usuario */
+.estado-usuario--activo {
+  --color-estado: var(--verde-hoja);
+}
+
+.estado-usuario--inactivo {
+  --color-estado: var(--tinta-suave);
+  background: var(--fondo);
+}
+
+.estado-usuario--bloqueado {
+  --color-estado: var(--arcilla);
+  flex-wrap: wrap;
+  column-gap: 4px;
+  white-space: normal;
+}
+
+.estado-usuario__detalle {
+  font-weight: 500;
+}
+
 /* En proceso: el punto late para indicar actividad */
 .estado-reporte--en_proceso .estado-reporte__punto,
 .estado-tarea--en_proceso .estado-reporte__punto {
