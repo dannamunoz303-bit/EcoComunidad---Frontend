@@ -9,6 +9,7 @@ import PaginaPronto from './paginas/PaginaPronto.jsx'
 import PaginaEditarReporte from './paginas/reportes/editar/PaginaEditarReporte.jsx'
 import PaginaReporte from './paginas/reportes/PaginaReporte.jsx'
 import PaginaReportes from './paginas/reportes/PaginaReportes.jsx'
+import PaginaCategorias from './paginas/categorias/PaginaCategorias.jsx'
 import PaginaCambioObligatorio from './paginas/cuenta/PaginaCambioObligatorio.jsx'
 import PaginaMiCuenta from './paginas/cuenta/PaginaMiCuenta.jsx'
 import PaginaResumen from './paginas/PaginaResumen.jsx'
@@ -23,7 +24,7 @@ import { RutaCambioObligatorio, RutaProtegida, RutaPublica } from './sesion/Ruta
 const PaginaMarca = import.meta.env.DEV ? lazy(() => import('./paginas/PaginaMarca.jsx')) : null
 
 // Secciones que ya tienen su página; las demás muestran "Esta sección llega pronto."
-const HECHAS = ['/', '/reportes', '/tareas', '/usuarios']
+const HECHAS = ['/', '/reportes', '/tareas', '/usuarios', '/categorias']
 
 export default function App() {
   return (
@@ -46,6 +47,7 @@ export default function App() {
             <Route path="/reportes/:id/editar" element={<PaginaEditarReporte />} />
             <Route path="/tareas" element={<PaginaTareas />} />
             <Route path="/mi-cuenta" element={<PaginaMiCuenta />} />
+            <Route path="/categorias" element={<PaginaCategorias />} />
             <Route path="/usuarios" element={<PaginaUsuarios />} />
             <Route path="/usuarios/nuevo" element={<PaginaNuevoUsuario />} />
             <Route path="/usuarios/:id" element={<PaginaUsuario />} />

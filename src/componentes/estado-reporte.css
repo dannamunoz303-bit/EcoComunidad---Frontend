@@ -95,6 +95,16 @@
   font-weight: 500;
 }
 
+/* Estado de la categoría */
+.estado-categoria--activa {
+  --color-estado: var(--verde-hoja);
+}
+
+.estado-categoria--inactiva {
+  --color-estado: var(--tinta-suave);
+  background: var(--fondo);
+}
+
 /* En proceso: el punto late para indicar actividad */
 .estado-reporte--en_proceso .estado-reporte__punto,
 .estado-tarea--en_proceso .estado-reporte__punto {
