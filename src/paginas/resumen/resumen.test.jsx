@@ -1,7 +1,7 @@
 import { act, fireEvent, screen, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { guardarSesion } from '../../api/sesion.js'
-import { ADMIN, montar, pedidos, responder, simularApi } from '../../pruebas/apiSimulada.jsx'
+import { ADMIN, montar, pedidos, responder, simularApi, urlActual } from '../../pruebas/apiSimulada.jsx'
 import { fechaHoyColombia, letraDelDia, nombreDelDia, tiempoRelativo } from '../../utilidades/fechas.js'
 
 const RUTA = 'GET /dashboard/resumen/'
@@ -176,13 +176,15 @@ describe('Resumen: datos', () => {
     expect(screen.getByRole('link', { name: /Gestores activos/ })).toHaveAttribute('href', '/usuarios')
   })
 
-  it('el enlace de un pendiente abre /reportes/<id> (llega pronto)', async () => {
+  it('el enlace de un pendiente abre el detalle /reportes/<id>', async () => {
     abrirResumen((c) => responder(c, 200, resumen()))
     await esperarDatos()
 
     fireEvent.click(screen.getByRole('link', { name: /Basura en el parque/ }))
 
-    expect(await screen.findByText('Esta sección llega pronto.')).toBeInTheDocument()
+    // El detalle no está simulado en esta prueba: responde 404
+    expect(await screen.findByText('Este reporte no existe o fue borrado.')).toBeInTheDocument()
+    expect(urlActual()).toBe('/reportes/12')
     expect(screen.getByRole('heading', { level: 1, name: 'Reportes' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Reportes' })).toHaveAttribute('aria-current', 'page')
   })

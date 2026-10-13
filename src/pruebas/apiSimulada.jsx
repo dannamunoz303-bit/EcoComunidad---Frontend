@@ -5,6 +5,7 @@ import { vi } from 'vitest'
 import cliente from '../api/cliente.js'
 import App from '../App.jsx'
 import ProveedorSesion from '../sesion/ProveedorSesion.jsx'
+import UbicacionActual from './UbicacionActual.jsx'
 
 // API simulada para las pruebas: el adaptador de axios responde sin llamar al backend.
 
@@ -41,10 +42,13 @@ export function montar(ruta = '/') {
     <MemoryRouter initialEntries={[ruta]}>
       <ProveedorSesion>
         <App />
+        <UbicacionActual />
       </ProveedorSesion>
     </MemoryRouter>,
   )
 }
+
+export const urlActual = () => document.querySelector('[data-testid="url-actual"]').textContent
 
 // Cuántas veces se pidió una ruta ("GET /dashboard/resumen/").
 export function pedidos(adaptador, clave) {

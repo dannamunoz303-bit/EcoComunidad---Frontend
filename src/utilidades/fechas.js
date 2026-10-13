@@ -17,11 +17,18 @@ const formatoHora = new Intl.DateTimeFormat('es-CO', {
 const ESPACIOS_ESPECIALES = new RegExp('[\\u00a0\\u202f]', 'g')
 const espaciosNormales = (texto) => texto.replace(ESPACIOS_ESPECIALES, ' ')
 
+// "a. m." y "p. m." no se parten al final de una línea.
+const PERIODO_DEL_DIA = / ([ap]\.) (m\.)/
+const NO_SEPARABLE = String.fromCharCode(0xa0)
+
 // "15 de octubre de 2026, 3:00 p. m." en hora de Colombia.
 export function formatearFechaHora(valor) {
   const fecha = new Date(valor)
   if (Number.isNaN(fecha.getTime())) return null
-  return espaciosNormales(`${formatoFecha.format(fecha)}, ${formatoHora.format(fecha)}`)
+  return espaciosNormales(`${formatoFecha.format(fecha)}, ${formatoHora.format(fecha)}`).replace(
+    PERIODO_DEL_DIA,
+    `${NO_SEPARABLE}$1${NO_SEPARABLE}$2`,
+  )
 }
 
 const formatoDiaIso = new Intl.DateTimeFormat('en-CA', {
@@ -90,4 +97,20 @@ export function tiempoRelativo(valor, ahora = Date.now()) {
     if (segundos >= tamano) return formatoRelativo.format(-Math.floor(segundos / tamano), unidad)
   }
   return formatoRelativo.format(-segundos, 'second')
+}
+
+const formatoFechaCorta = new Intl.DateTimeFormat('es-CO', {
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+  timeZone: ZONA_COLOMBIA,
+})
+
+// "13 oct. 2026" en hora de Colombia.
+export function formatearFechaCorta(valor) {
+  const fecha = new Date(valor)
+  if (Number.isNaN(fecha.getTime())) return null
+  const partes = Object.fromEntries(formatoFechaCorta.formatToParts(fecha).map((p) => [p.type, p.value]))
+  const mes = partes.month.endsWith('.') ? partes.month : `${partes.month}.`
+  return `${partes.day} ${mes} ${partes.year}`
 }

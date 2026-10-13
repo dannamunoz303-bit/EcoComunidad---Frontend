@@ -5,6 +5,8 @@ import { SECCIONES } from './componentes/secciones.js'
 import PaginaLogin from './paginas/PaginaLogin.jsx'
 import PaginaNoEncontrada from './paginas/PaginaNoEncontrada.jsx'
 import PaginaPronto from './paginas/PaginaPronto.jsx'
+import PaginaReporte from './paginas/reportes/PaginaReporte.jsx'
+import PaginaReportes from './paginas/reportes/PaginaReportes.jsx'
 import PaginaResumen from './paginas/PaginaResumen.jsx'
 import { RutaProtegida, RutaPublica } from './sesion/RutasSesion.jsx'
 
@@ -21,11 +23,11 @@ export default function App() {
       <Route element={<RutaProtegida />}>
         <Route element={<DisenoPanel />}>
           <Route index element={<PaginaResumen />} />
-          {SECCIONES.filter(({ ruta }) => ruta !== '/').map(({ ruta }) => (
+          <Route path="/reportes" element={<PaginaReportes />} />
+          <Route path="/reportes/:id" element={<PaginaReporte />} />
+          {SECCIONES.filter(({ ruta }) => ruta !== '/' && ruta !== '/reportes').map(({ ruta }) => (
             <Route key={ruta} path={ruta} element={<PaginaPronto />} />
           ))}
-          {/* Detalle de un reporte: llega en un paso posterior */}
-          <Route path="/reportes/:id" element={<PaginaPronto />} />
         </Route>
       </Route>
 

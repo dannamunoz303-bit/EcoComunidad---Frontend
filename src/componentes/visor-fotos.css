@@ -1,0 +1,88 @@
+.visor {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: var(--espacio-7) var(--espacio-8);
+}
+
+.visor__fondo {
+  position: absolute;
+  inset: 0;
+  background: rgb(20 33 26 / 0.88);
+}
+
+.visor__figura {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: var(--espacio-3);
+  max-width: 100%;
+  max-height: 100%;
+  margin: 0;
+}
+
+.visor__imagen {
+  max-width: min(100%, 1100px);
+  max-height: calc(100vh - 160px);
+  border-radius: 14px;
+  object-fit: contain;
+  background: var(--tinta);
+}
+
+.visor__pie {
+  color: var(--superficie);
+  font-weight: 500;
+}
+
+.visor__boton {
+  position: absolute;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border: 0;
+  border-radius: var(--radio-boton);
+  background: rgb(255 255 255 / 0.14);
+  color: var(--superficie);
+}
+
+.visor__boton:hover {
+  background: rgb(255 255 255 / 0.24);
+}
+
+.visor :focus-visible {
+  outline-color: var(--verde-brote);
+}
+
+.visor__cerrar {
+  top: var(--espacio-4);
+  right: var(--espacio-4);
+}
+
+.visor__anterior {
+  left: var(--espacio-4);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.visor__siguiente {
+  right: var(--espacio-4);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+@media (max-width: 599px) {
+  .visor {
+    padding: var(--espacio-8) var(--espacio-3);
+  }
+
+  .visor__anterior,
+  .visor__siguiente {
+    top: auto;
+    bottom: var(--espacio-4);
+    transform: none;
+  }
+}
