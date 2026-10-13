@@ -34,8 +34,13 @@ export function cerrarSesion(datos = null) {
   )
 }
 
-// El servidor no respondió (red caída, servidor apagado).
-const esSinConexion = (error) => !error.response && !error.sinRefresh
+// El servidor no respondió (red caída) o no está disponible (500, 502, 503, 504).
+const ESTADOS_SERVIDOR_NO_DISPONIBLE = [500, 502, 503, 504]
+
+export function esSinConexion(error) {
+  if (!error.response) return !error.sinRefresh
+  return ESTADOS_SERVIDOR_NO_DISPONIBLE.includes(error.response.status)
+}
 
 const esRuta = (config, ruta) => (config.url ?? '').endsWith(ruta)
 
@@ -55,7 +60,7 @@ function renovarAccess() {
         return data.access
       })
       .catch((error) => {
-        // Sin respuesta del servidor no se sabe si la sesión sigue válida: se conserva.
+        // Sin conexión no se sabe si la sesión sigue válida: se conserva.
         if (!esSinConexion(error)) {
           const data = error.response?.data
           cerrarSesion(esEstadoDenegado(data) ? data : null)
@@ -94,7 +99,7 @@ cliente.interceptors.response.use(
       try {
         await renovarAccess()
       } catch (errorRefresh) {
-        // Si el refresh no tuvo respuesta, se propaga ese error para distinguir "sin conexión".
+        // Si el refresh quedó sin conexión, se propaga ese error para distinguirlo.
         throw esSinConexion(errorRefresh) ? errorRefresh : error
       }
       // El interceptor de petición pone el access nuevo.

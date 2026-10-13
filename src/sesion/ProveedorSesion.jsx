@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import cliente, { EVENTO_SESION_CERRADA } from '../api/cliente.js'
+import cliente, { esSinConexion, EVENTO_SESION_CERRADA } from '../api/cliente.js'
 import {
   bienvenidaPendiente,
   borrarSesion,
@@ -49,7 +49,7 @@ export default function ProveedorSesion({ children }) {
         .catch((error) => {
           if (axios.isCancel(error)) return
           // 401 sin refresh posible y 403 de estado llegan por "sesion-cerrada".
-          if (!error.response) setSinConexion(true)
+          if (esSinConexion(error)) setSinConexion(true)
         })
         .finally(() => {
           if (!signal?.aborted) setCargando(false)

@@ -431,6 +431,51 @@ describe('sin conexión al abrir la app', () => {
     expect(leerAccess()).toBeNull()
   })
 
+  it.each([500, 502, 503, 504])('si /auth/yo/ responde %i, muestra el aviso y no el login', async (status) => {
+    guardarSesion({ access: 'acc-1', refresh: 'ref-1' })
+    simularApi({ 'GET /auth/yo/': (c) => responder(c, status) })
+    montar('/login')
+
+    expect(await screen.findByText(mensaje)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Reintentar' })).toBeInTheDocument()
+    expect(screen.queryByLabelText('Correo')).not.toBeInTheDocument()
+    expect(leerAccess()).toBe('acc-1')
+  })
+
+  it('tras un 503, "Reintentar" entra cuando el servidor vuelve', async () => {
+    guardarSesion({ access: 'acc-1', refresh: 'ref-1' })
+    let disponible = false
+    simularApi({ 'GET /auth/yo/': (c) => responder(c, disponible ? 200 : 503, disponible ? ADMIN : {}) })
+    montar('/')
+    await screen.findByText(mensaje)
+
+    disponible = true
+    fireEvent.click(screen.getByRole('button', { name: 'Reintentar' }))
+
+    expect(await tituloSeccion('Resumen')).toBeInTheDocument()
+  })
+
+  it('si el refresh responde 503, conserva la sesión y muestra el aviso', async () => {
+    guardarSesion({ access: 'viejo', refresh: 'ref-1' })
+    simularApi({
+      'GET /auth/yo/': (c) => responder(c, 401),
+      'POST /auth/refresh/': (c) => responder(c, 503),
+    })
+    montar('/')
+
+    expect(await screen.findByText(mensaje)).toBeInTheDocument()
+    expect(leerRefresh()).toBe('ref-1')
+  })
+
+  it('otros errores del servidor (por ejemplo 404) no cuentan como sin conexión', async () => {
+    guardarSesion({ access: 'acc-1', refresh: 'ref-1' })
+    simularApi({ 'GET /auth/yo/': (c) => responder(c, 404) })
+    montar('/')
+
+    expect(await screen.findByLabelText('Correo')).toBeInTheDocument()
+    expect(screen.queryByText(mensaje)).not.toBeInTheDocument()
+  })
+
   it('si el access venció y el refresh no tiene respuesta, también muestra el aviso', async () => {
     guardarSesion({ access: 'viejo', refresh: 'ref-1' })
     simularApi({
