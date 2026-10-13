@@ -1,7 +1,7 @@
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { useEffect, useMemo } from 'react'
-import { MapContainer, Marker, TileLayer, useMap } from 'react-leaflet'
+import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from 'react-leaflet'
 
 const ICONO = L.divIcon({
   className: 'marcador-reporte marcador-reporte--arrastrable',
@@ -13,6 +13,8 @@ const ICONO = L.divIcon({
   iconAnchor: [16, 41],
 })
 
+const ZOOM_CON_MARCADOR = 17
+
 // Si la posición cambia por fuera (por ejemplo, "Volver a la ubicación original"), centra el mapa.
 function Centrar({ latitud, longitud }) {
   const mapa = useMap()
@@ -22,7 +24,19 @@ function Centrar({ latitud, longitud }) {
   return null
 }
 
-export default function MapaEditable({ latitud, longitud, alMover }) {
+function AlHacerClic({ alHacerClic }) {
+  useMapEvents({
+    click(evento) {
+      alHacerClic(evento.latlng.lat, evento.latlng.lng)
+    },
+  })
+  return null
+}
+
+// latitud/longitud: el marcador (puede no haber). centro y zoom: dónde abrir el mapa si no hay marcador.
+// alHacerClic: si se pasa, un clic en el mapa pone el marcador ahí.
+export default function MapaEditable({ latitud = null, longitud = null, centro, zoom, alMover, alHacerClic }) {
+  const hayMarcador = latitud !== null && longitud !== null
   const manejadores = useMemo(
     () => ({
       dragend(evento) {
@@ -34,21 +48,31 @@ export default function MapaEditable({ latitud, longitud, alMover }) {
   )
 
   return (
-    <MapContainer className="mapa-reporte mapa-reporte--editable" center={[latitud, longitud]} zoom={17} scrollWheelZoom={false}>
+    <MapContainer
+      className="mapa-reporte mapa-reporte--editable"
+      center={hayMarcador ? [latitud, longitud] : centro}
+      zoom={hayMarcador ? ZOOM_CON_MARCADOR : zoom}
+      scrollWheelZoom={false}
+    >
       <TileLayer
         url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         maxZoom={19}
       />
-      <Marker
-        position={[latitud, longitud]}
-        icon={ICONO}
-        draggable
-        eventHandlers={manejadores}
-        title="Arrastra el marcador para cambiar la ubicación"
-        alt="Ubicación del reporte"
-      />
-      <Centrar latitud={latitud} longitud={longitud} />
+      {hayMarcador && (
+        <>
+          <Marker
+            position={[latitud, longitud]}
+            icon={ICONO}
+            draggable
+            eventHandlers={manejadores}
+            title="Arrastra el marcador para cambiar la ubicación"
+            alt="Ubicación del reporte"
+          />
+          <Centrar latitud={latitud} longitud={longitud} />
+        </>
+      )}
+      {alHacerClic && <AlHacerClic alHacerClic={alHacerClic} />}
     </MapContainer>
   )
 }

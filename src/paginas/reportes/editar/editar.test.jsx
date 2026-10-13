@@ -3,10 +3,24 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { guardarSesion } from '../../../api/sesion.js'
 import { ADMIN, montar, pedidos, responder, simularApi, urlActual } from '../../../pruebas/apiSimulada.jsx'
 
-// Mapa simulado: el marcador expone un botón que imita arrastrarlo a otro punto.
+// Mapa simulado: el marcador expone un botón que imita arrastrarlo a otro punto,
+// y el mapa otro que imita un clic (si alguien escucha los clics).
 const NUEVA_POSICION = { lat: 4.7123456789, lng: -74.0711111111 }
+const PUNTO_CLIC = { lat: 4.6512345678, lng: -74.0987654321 }
+const mapaSimulado = vi.hoisted(() => ({ clic: null }))
 vi.mock('react-leaflet', () => ({
-  MapContainer: ({ children }) => <div data-testid="mapa">{children}</div>,
+  MapContainer: ({ center, zoom, children }) => (
+    <div data-testid="mapa" data-centro={center.join(',')} data-zoom={zoom}>
+      {children}
+      <button type="button" onClick={() => mapaSimulado.clic?.({ latlng: PUNTO_CLIC })}>
+        Simular clic en el mapa
+      </button>
+    </div>
+  ),
+  useMapEvents: (manejadores) => {
+    mapaSimulado.clic = manejadores.click
+    return {}
+  },
   TileLayer: () => null,
   Marker: ({ position, draggable, eventHandlers }) => (
     <button
@@ -52,9 +66,11 @@ const CATEGORIAS = [
 
 const PATCH = 'PATCH /reportes/7/'
 
-function abrir(reporte = REPORTE, respuestaPatch) {
+function abrir(reporte = REPORTE, respuestaPatch, otrosReportes = []) {
   guardarSesion({ access: 'acc-1', refresh: 'ref-1' })
+  mapaSimulado.clic = null
   const adaptador = simularApi({
+    'GET /reportes/': (c) => responder(c, 200, [reporte, ...otrosReportes]),
     'GET /auth/yo/': (c) => responder(c, 200, ADMIN),
     'GET /reportes/7/': (c) => responder(c, 200, reporte),
     'GET /reportes/7/tareas/': (c) => responder(c, 200, []),
@@ -262,6 +278,78 @@ describe('Editar reporte', () => {
     fireEvent.click(guardar())
     await screen.findByText('Cambios guardados.', { selector: '.aviso-flotante__texto' })
     expect(cuerpoPatch(adaptador)).toEqual({ latitud: '4.60000000', longitud: '-74.08000000' })
+  })
+
+  describe('reporte sin coordenadas', () => {
+    const SIN = { ...REPORTE, latitud: null, longitud: null }
+    const otro = (id, latitud, longitud) => ({ ...REPORTE, id, latitud, longitud })
+
+    it('el mapa se abre en el promedio de los demás reportes con coordenadas (zoom 13)', async () => {
+      abrir(SIN, undefined, [otro(8, '4.00000000', '-74.00000000'), otro(9, '5.00000000', '-75.00000000'), otro(10, null, null)])
+      await formulario()
+
+      const mapa = await screen.findByTestId('mapa')
+      expect(mapa).toHaveAttribute('data-centro', '4.5,-74.5')
+      expect(mapa).toHaveAttribute('data-zoom', '13')
+      expect(screen.queryByTestId('marcador')).not.toBeInTheDocument()
+      expect(screen.getByText(/Haz clic en el mapa para poner el marcador/)).toBeInTheDocument()
+    })
+
+    it('si ningún reporte tiene coordenadas, se abre en el centro de Colombia (zoom 6)', async () => {
+      abrir(SIN, undefined, [otro(10, null, null)])
+      await formulario()
+
+      const mapa = await screen.findByTestId('mapa')
+      expect(mapa).toHaveAttribute('data-centro', '4.5709,-74.2973')
+      expect(mapa).toHaveAttribute('data-zoom', '6')
+    })
+
+    it('si no se pueden cargar los demás reportes, también usa el centro de Colombia', async () => {
+      guardarSesion({ access: 'acc-1', refresh: 'ref-1' })
+      simularApi({
+        'GET /auth/yo/': (c) => responder(c, 200, ADMIN),
+        'GET /reportes/7/': (c) => responder(c, 200, SIN),
+        'GET /categorias/': (c) => responder(c, 200, CATEGORIAS),
+        'GET /reportes/': (c) => responder(c, 500),
+      })
+      montar('/reportes/7/editar')
+
+      expect(await screen.findByTestId('mapa')).toHaveAttribute('data-centro', '4.5709,-74.2973')
+    })
+
+    it('un clic en el mapa pone el marcador y llena latitud y longitud', async () => {
+      const adaptador = abrir(SIN, undefined, [otro(8, '4.00000000', '-74.00000000')])
+      await formulario()
+      await screen.findByTestId('mapa')
+
+      fireEvent.click(screen.getByRole('button', { name: 'Simular clic en el mapa' }))
+
+      expect(screen.getByLabelText('Latitud')).toHaveValue('4.65123457')
+      expect(screen.getByLabelText('Longitud')).toHaveValue('-74.09876543')
+      expect(await screen.findByTestId('marcador')).toHaveAttribute('data-posicion', '4.65123457,-74.09876543')
+
+      fireEvent.click(guardar())
+      await screen.findByText('Cambios guardados.', { selector: '.aviso-flotante__texto' })
+      expect(cuerpoPatch(adaptador)).toEqual({ latitud: '4.65123457', longitud: '-74.09876543' })
+    })
+
+    it('si el reporte ya tenía coordenadas, el clic en el mapa no mueve el marcador', async () => {
+      abrir()
+      await formulario()
+      await screen.findByTestId('marcador')
+
+      fireEvent.click(screen.getByRole('button', { name: 'Simular clic en el mapa' }))
+
+      expect(screen.getByLabelText('Latitud')).toHaveValue('4.71098600')
+    })
+  })
+
+  it('los otros reportes solo se piden si el reporte no tiene coordenadas', async () => {
+    const adaptador = abrir()
+    await formulario()
+    await screen.findByTestId('marcador')
+
+    expect(pedidos(adaptador, 'GET /reportes/')).toBe(0)
   })
 
   it('el marcador se arrastra y "Volver a la ubicación original" restablece las coordenadas', async () => {

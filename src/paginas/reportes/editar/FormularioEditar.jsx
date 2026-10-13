@@ -1,11 +1,12 @@
-import { CircleAlert, MapPinOff, RotateCcw } from 'lucide-react'
+import { CircleAlert, MapPin, RotateCcw } from 'lucide-react'
 import { lazy, Suspense, useCallback, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { erroresPorCampo, mensajeDeError } from '../../../api/errores.js'
-import { editarReporte } from '../../../api/reportes.js'
+import { editarReporte, listarReportes } from '../../../api/reportes.js'
 import Campo from '../../../componentes/Campo.jsx'
+import { useCarga } from '../../../utilidades/useCarga.js'
 import { useEnvio } from '../acciones/useEnvio.js'
-import { conOchoDecimales, leerCoordenada } from './coordenadas.js'
+import { CENTRO_COLOMBIA, centroInicial, conOchoDecimales, leerCoordenada } from './coordenadas.js'
 
 const MapaEditable = lazy(() => import('./MapaEditable.jsx'))
 
@@ -82,6 +83,15 @@ export default function FormularioEditar({ reporte, categorias, volver, alGuarda
   const cambios = camposCambiados(original, normalizados)
   const hayCambios = Object.keys(cambios).length > 0
   const teniaUbicacion = posicionDe(original) !== null
+
+  // Sin coordenadas: el mapa se abre en el promedio de los demás reportes con ubicación.
+  // Solo se piden los reportes en ese caso; si fallan, se usa el centro de Colombia.
+  const cargarOtros = useCallback(
+    () => (teniaUbicacion ? Promise.resolve([]) : listarReportes()),
+    [teniaUbicacion],
+  )
+  const otros = useCarga(cargarOtros)
+  const inicioMapa = otros.error ? CENTRO_COLOMBIA : centroInicial(otros.datos, reporte.id)
   const ubicacionMovida = valores.latitud !== original.latitud || valores.longitud !== original.longitud
   const errorCoordenada = (campo) => (revisar[campo] ? coordenadas[campo].error : null) ?? errores[campo]
 
@@ -224,20 +234,31 @@ export default function FormularioEditar({ reporte, categorias, volver, alGuarda
           )}
         </Campo>
 
-        {posicion ? (
-          <>
-            <p className="campo__ayuda">
-              Arrastra el marcador o escribe la latitud y la longitud para cambiar la ubicación.
-            </p>
-            <Suspense fallback={<div className="mapa-reporte mapa-reporte--cargando" aria-hidden="true" />}>
-              <MapaEditable latitud={posicion[0]} longitud={posicion[1]} alMover={alMover} />
-            </Suspense>
-          </>
+        {teniaUbicacion || posicion ? (
+          <p className="campo__ayuda">
+            Arrastra el marcador o escribe la latitud y la longitud para cambiar la ubicación.
+          </p>
         ) : (
           <p className="ubicacion__sin-mapa">
-            <MapPinOff size={20} aria-hidden="true" />
-            Este reporte no tiene coordenadas, por eso no se puede mostrar el mapa.
+            <MapPin size={20} aria-hidden="true" />
+            Este reporte no tiene coordenadas. Haz clic en el mapa para poner el marcador o escribe la latitud y la
+            longitud.
           </p>
+        )}
+        {teniaUbicacion || !otros.cargando || otros.error ? (
+          <Suspense fallback={<div className="mapa-reporte mapa-reporte--cargando" aria-hidden="true" />}>
+            <MapaEditable
+              latitud={posicion?.[0] ?? null}
+              longitud={posicion?.[1] ?? null}
+              centro={inicioMapa.centro}
+              zoom={inicioMapa.zoom}
+              alMover={alMover}
+              // Un clic pone el marcador solo si el reporte no tenía ubicación
+              alHacerClic={teniaUbicacion ? undefined : alMover}
+            />
+          </Suspense>
+        ) : (
+          <div className="mapa-reporte mapa-reporte--cargando" aria-hidden="true" data-testid="mapa-cargando" />
         )}
 
         <div className="formulario-editar__coordenadas">

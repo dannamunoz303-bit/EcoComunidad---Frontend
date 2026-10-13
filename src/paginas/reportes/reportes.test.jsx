@@ -237,7 +237,7 @@ describe('Lista de reportes', () => {
     const chip = screen.getByText('Reportes de Luis Torres')
     expect(chip).toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Quitar el filtro: reportes de Luis Torres' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Quitar el filtro: Reportes de Luis Torres' }))
 
     expect(urlActual()).toBe('/reportes?estado=aprobado')
     expect(screen.queryByText('Reportes de Luis Torres')).not.toBeInTheDocument()
@@ -251,6 +251,13 @@ describe('Lista de reportes', () => {
 
     expect(await screen.findByText('Reportes de Rosa Mora')).toBeInTheDocument()
     expect(screen.getByText('No encontramos reportes con esos filtros. Prueba con otros.')).toBeInTheDocument()
+  })
+
+  it('si no se encuentra el nombre, el chip dice "Reportes del ciudadano #<id>"', async () => {
+    abrir('/reportes?ciudadano=77', { 'GET /usuarios/77/': (c) => responder(c, 404, { detail: 'No encontrado.' }) })
+
+    expect(await screen.findByText('Reportes del ciudadano #77')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Quitar el filtro: Reportes del ciudadano #77' })).toBeInTheDocument()
   })
 
   it('el detalle vuelve a la lista con los mismos filtros', async () => {

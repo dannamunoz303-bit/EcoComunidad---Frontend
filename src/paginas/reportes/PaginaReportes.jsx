@@ -66,9 +66,9 @@ export default function PaginaReportes() {
   )
   const ciudadano = useCarga(cargarCiudadano)
   const personaFiltro = deLosReportes ?? ciudadano.datos
-  const nombreFiltro = personaFiltro
-    ? `${personaFiltro.nombre} ${personaFiltro.apellido}`
-    : `el ciudadano #${filtros.ciudadano}`
+  const textoChip = personaFiltro
+    ? `Reportes de ${personaFiltro.nombre} ${personaFiltro.apellido}`
+    : `Reportes del ciudadano #${filtros.ciudadano}`
 
   const { visibles, conteo } = useMemo(() => {
     if (!reportes.datos) return { visibles: [], conteo: {} }
@@ -121,11 +121,11 @@ export default function PaginaReportes() {
 
       {filtros.ciudadano && (
         <p className="chip-filtro">
-          Reportes de {nombreFiltro}
+          {textoChip}
           <button
             type="button"
             className="chip-filtro__quitar"
-            aria-label={`Quitar el filtro: reportes de ${nombreFiltro}`}
+            aria-label={`Quitar el filtro: ${textoChip}`}
             onClick={() => alCambiar({ ciudadano: '' })}
           >
             <X size={16} aria-hidden="true" />
