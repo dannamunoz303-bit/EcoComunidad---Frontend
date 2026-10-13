@@ -34,6 +34,9 @@ export function cerrarSesion(datos = null) {
   )
 }
 
+// El servidor no respondió (red caída, servidor apagado).
+const esSinConexion = (error) => !error.response && !error.sinRefresh
+
 const esRuta = (config, ruta) => (config.url ?? '').endsWith(ruta)
 
 // Un único refresh compartido por todas las peticiones que reciben 401 a la vez.
@@ -45,15 +48,18 @@ function renovarAccess() {
     refreshEnCurso = (
       refresh
         ? cliente.post(RUTA_REFRESH, { refresh }, { _esRefresh: true })
-        : Promise.reject(new Error('No hay refresh guardado'))
+        : Promise.reject(Object.assign(new Error('No hay refresh guardado'), { sinRefresh: true }))
     )
       .then(({ data }) => {
         guardarSesion({ access: data.access, refresh: data.refresh })
         return data.access
       })
       .catch((error) => {
-        const data = error.response?.data
-        cerrarSesion(esEstadoDenegado(data) ? data : null)
+        // Sin respuesta del servidor no se sabe si la sesión sigue válida: se conserva.
+        if (!esSinConexion(error)) {
+          const data = error.response?.data
+          cerrarSesion(esEstadoDenegado(data) ? data : null)
+        }
         throw error
       })
       .finally(() => {
@@ -87,8 +93,9 @@ cliente.interceptors.response.use(
     if (response.status === 401 && !config._reintento && haySesion()) {
       try {
         await renovarAccess()
-      } catch {
-        throw error
+      } catch (errorRefresh) {
+        // Si el refresh no tuvo respuesta, se propaga ese error para distinguir "sin conexión".
+        throw esSinConexion(errorRefresh) ? errorRefresh : error
       }
       // El interceptor de petición pone el access nuevo.
       return cliente({ ...config, _reintento: true })

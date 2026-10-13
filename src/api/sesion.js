@@ -1,7 +1,7 @@
 // Tokens JWT del administrador en localStorage.
 const CLAVE_ACCESS = 'ecocomunidad.access'
 const CLAVE_REFRESH = 'ecocomunidad.refresh'
-// Bienvenida pendiente: se marca al iniciar sesión y se quita al cerrarla.
+// Bienvenida (sessionStorage): "pendiente" al iniciar sesión, "vista" en cuanto aparece.
 const CLAVE_BIENVENIDA = 'ecocomunidad.bienvenida'
 
 export function guardarSesion({ access, refresh }) {
@@ -24,17 +24,17 @@ export function haySesion() {
 export function borrarSesion() {
   localStorage.removeItem(CLAVE_ACCESS)
   localStorage.removeItem(CLAVE_REFRESH)
-  localStorage.removeItem(CLAVE_BIENVENIDA)
+  sessionStorage.removeItem(CLAVE_BIENVENIDA)
 }
 
 export function marcarBienvenidaPendiente() {
-  localStorage.setItem(CLAVE_BIENVENIDA, 'pendiente')
+  sessionStorage.setItem(CLAVE_BIENVENIDA, 'pendiente')
 }
 
 export function bienvenidaPendiente() {
-  return localStorage.getItem(CLAVE_BIENVENIDA) === 'pendiente'
+  return sessionStorage.getItem(CLAVE_BIENVENIDA) === 'pendiente'
 }
 
-export function descartarBienvenida() {
-  localStorage.removeItem(CLAVE_BIENVENIDA)
+export function marcarBienvenidaVista() {
+  sessionStorage.setItem(CLAVE_BIENVENIDA, 'vista')
 }

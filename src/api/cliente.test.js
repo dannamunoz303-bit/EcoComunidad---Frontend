@@ -130,6 +130,32 @@ describe('interceptor de la API', () => {
     expect(alCerrarSesion.mock.calls[0][0].detail.code).toBe('usuario_inactivo')
   })
 
+  it('si el refresh no tiene respuesta, conserva la sesión y lanza el error de red', async () => {
+    guardarSesion({ access: 'viejo', refresh: 'ref-1' })
+    adaptador.mockImplementation((config) =>
+      esRefresh(config)
+        ? Promise.reject(new AxiosError('Network Error', AxiosError.ERR_NETWORK, config, {}))
+        : responder(config, 401),
+    )
+
+    const error = await cliente.get('/reportes/').catch((e) => e)
+
+    expect(error.response).toBeUndefined()
+    expect(error.code).toBe(AxiosError.ERR_NETWORK)
+    expect(leerRefresh()).toBe('ref-1')
+    expect(alCerrarSesion).not.toHaveBeenCalled()
+  })
+
+  it('un 401 sin refresh guardado cierra la sesión', async () => {
+    guardarSesion({ access: 'viejo' })
+    adaptador.mockImplementation((config) => responder(config, 401))
+
+    await expect(cliente.get('/reportes/')).rejects.toMatchObject({ response: { status: 401 } })
+
+    expect(leerAccess()).toBeNull()
+    expect(alCerrarSesion).toHaveBeenCalledTimes(1)
+  })
+
   it('un 401 en el login no intenta refresh', async () => {
     adaptador.mockImplementation((config) => responder(config, 401, { detail: 'Credenciales incorrectas' }))
 

@@ -4,10 +4,10 @@ import cliente, { EVENTO_SESION_CERRADA } from '../api/cliente.js'
 import {
   bienvenidaPendiente,
   borrarSesion,
-  descartarBienvenida,
   guardarSesion,
   haySesion,
   marcarBienvenidaPendiente,
+  marcarBienvenidaVista,
 } from '../api/sesion.js'
 import { ContextoSesion } from './contexto.js'
 import { MENSAJES, mensajePorEstado } from './mensajes.js'
@@ -16,12 +16,15 @@ const esAdministrador = (usuario) => usuario?.rol === 'administrador'
 
 // Sesión del administrador. Los tokens viven en localStorage (api/sesion.js);
 // aquí se guarda el usuario de /auth/yo/, si se está comprobando la sesión
-// y el motivo por el que se cerró (se muestra en /login).
+// si el servidor no respondió al comprobarla y el motivo por el que se cerró
+// (se muestra en /login).
 export default function ProveedorSesion({ children }) {
   const [usuario, setUsuario] = useState(null)
   // Si hay tokens se empieza cargando: así no aparece el login un instante.
   const [cargando, setCargando] = useState(haySesion)
   const [motivo, setMotivo] = useState(null)
+  // Hay tokens pero el servidor no respondió a /auth/yo/: no se muestra el login.
+  const [sinConexion, setSinConexion] = useState(false)
   const [conBienvenida, setConBienvenida] = useState(bienvenidaPendiente)
 
   const limpiar = useCallback((nuevoMotivo = null) => {
@@ -29,29 +32,44 @@ export default function ProveedorSesion({ children }) {
     setUsuario(null)
     setConBienvenida(false)
     setCargando(false)
+    setSinConexion(false)
     setMotivo(nuevoMotivo)
   }, [])
 
-  // Al abrir la app: si hay tokens, se comprueba la sesión con /auth/yo/.
+  // Comprueba la sesión guardada con /auth/yo/.
+  const comprobarSesion = useCallback(
+    (signal) =>
+      cliente
+        .get('/auth/yo/', { signal })
+        .then(({ data }) => {
+          if (!esAdministrador(data)) return limpiar(MENSAJES.soloAdministradores)
+          setUsuario(data)
+          setSinConexion(false)
+        })
+        .catch((error) => {
+          if (axios.isCancel(error)) return
+          // 401 sin refresh posible y 403 de estado llegan por "sesion-cerrada".
+          if (!error.response) setSinConexion(true)
+        })
+        .finally(() => {
+          if (!signal?.aborted) setCargando(false)
+        }),
+    [limpiar],
+  )
+
+  // Al abrir la app: si hay tokens, se comprueba la sesión.
   useEffect(() => {
     if (!haySesion()) return undefined
     const control = new AbortController()
-    cliente
-      .get('/auth/yo/', { signal: control.signal })
-      .then(({ data }) => {
-        if (esAdministrador(data)) setUsuario(data)
-        else limpiar(MENSAJES.soloAdministradores)
-      })
-      .catch((error) => {
-        if (axios.isCancel(error)) return
-        // 401 sin refresh posible y 403 de estado ya llegan por "sesion-cerrada".
-        if (!error.response) setMotivo(MENSAJES.sinConexion)
-      })
-      .finally(() => {
-        if (!control.signal.aborted) setCargando(false)
-      })
+    comprobarSesion(control.signal)
     return () => control.abort()
-  }, [limpiar])
+  }, [comprobarSesion])
+
+  // Botón "Reintentar" de la pantalla sin conexión.
+  const reintentar = useCallback(() => {
+    setCargando(true)
+    return comprobarSesion()
+  }, [comprobarSesion])
 
   // El interceptor avisa cuando la sesión se cierra (refresh fallido o 403 de estado).
   useEffect(() => {
@@ -90,14 +108,35 @@ export default function ProveedorSesion({ children }) {
 
   const cerrarSesion = useCallback(() => limpiar(null), [limpiar])
 
-  const cerrarBienvenida = useCallback(() => {
-    descartarBienvenida()
+  // La bienvenida cuenta como vista en cuanto aparece.
+  const marcarBienvenidaComoVista = useCallback(() => {
+    marcarBienvenidaVista()
     setConBienvenida(false)
   }, [])
 
   const valor = useMemo(
-    () => ({ usuario, cargando, motivo, conBienvenida, iniciarSesion, cerrarSesion, cerrarBienvenida }),
-    [usuario, cargando, motivo, conBienvenida, iniciarSesion, cerrarSesion, cerrarBienvenida],
+    () => ({
+      usuario,
+      cargando,
+      sinConexion,
+      motivo,
+      conBienvenida,
+      iniciarSesion,
+      cerrarSesion,
+      reintentar,
+      marcarBienvenidaComoVista,
+    }),
+    [
+      usuario,
+      cargando,
+      sinConexion,
+      motivo,
+      conBienvenida,
+      iniciarSesion,
+      cerrarSesion,
+      reintentar,
+      marcarBienvenidaComoVista,
+    ],
   )
 
   return <ContextoSesion.Provider value={valor}>{children}</ContextoSesion.Provider>

@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 import { AxiosError } from 'axios'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -278,28 +278,50 @@ describe('diseño del panel', () => {
 describe('bienvenida', () => {
   const textoBienvenida = '¡Hola de nuevo, Laura! Tu barrio te está esperando.'
 
-  it('sale una vez tras iniciar sesión y no vuelve al cerrarla', async () => {
+  it('sale tras iniciar sesión y queda vista en cuanto aparece', async () => {
     simularApi(loginCorrecto())
-    const { unmount } = montar('/login')
+    montar('/login')
     await ingresar()
 
     expect(await screen.findByText(textoBienvenida)).toBeInTheDocument()
     expect(screen.getByRole('img', { name: 'Brotico saludando' })).toBeInTheDocument()
+    expect(sessionStorage.getItem('ecocomunidad.bienvenida')).toBe('vista')
+  })
 
-    fireEvent.click(screen.getByRole('button', { name: 'Cerrar bienvenida' }))
+  it('el botón la cierra', async () => {
+    simularApi(loginCorrecto())
+    montar('/login')
+    await ingresar()
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Cerrar bienvenida' }))
+
     expect(screen.queryByText(textoBienvenida)).not.toBeInTheDocument()
+  })
 
-    // Ir a otra sección y volver
+  it('no vuelve al recargar, aunque no se haya cerrado', async () => {
+    simularApi(loginCorrecto())
+    const { unmount } = montar('/login')
+    await ingresar()
+    expect(await screen.findByText(textoBienvenida)).toBeInTheDocument()
+
+    unmount()
+    montar('/')
+    await tituloSeccion('Resumen')
+
+    expect(screen.queryByText(textoBienvenida)).not.toBeInTheDocument()
+  })
+
+  it('no vuelve al ir a otra sección y regresar al Resumen', async () => {
+    simularApi(loginCorrecto())
+    montar('/login')
+    await ingresar()
+    expect(await screen.findByText(textoBienvenida)).toBeInTheDocument()
+
     fireEvent.click(screen.getByRole('link', { name: 'Reportes' }))
     await tituloSeccion('Reportes')
     fireEvent.click(screen.getByRole('link', { name: 'Resumen' }))
     await tituloSeccion('Resumen')
-    expect(screen.queryByText(textoBienvenida)).not.toBeInTheDocument()
 
-    // Recargar la app con la misma sesión
-    unmount()
-    montar('/')
-    await tituloSeccion('Resumen')
     expect(screen.queryByText(textoBienvenida)).not.toBeInTheDocument()
   })
 
@@ -307,7 +329,7 @@ describe('bienvenida', () => {
     simularApi(loginCorrecto())
     montar('/login')
     await ingresar()
-    fireEvent.click(await screen.findByRole('button', { name: 'Cerrar bienvenida' }))
+    expect(await screen.findByText(textoBienvenida)).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Cerrar sesión' }))
     await ingresar()
@@ -321,6 +343,103 @@ describe('bienvenida', () => {
     montar('/')
     await tituloSeccion('Resumen')
 
-    await waitFor(() => expect(screen.queryByText(textoBienvenida)).not.toBeInTheDocument())
+    expect(screen.queryByText(textoBienvenida)).not.toBeInTheDocument()
+  })
+})
+
+describe('sin conexión al abrir la app', () => {
+  const mensaje = 'No pudimos conectar con el servidor. Revisa tu conexión.'
+
+  it.each(['/', '/reportes', '/login'])('con tokens en %s muestra el aviso y no el login', async (ruta) => {
+    guardarSesion({ access: 'acc-1', refresh: 'ref-1' })
+    simularApi({ 'GET /auth/yo/': sinConexion })
+    montar(ruta)
+
+    expect(await screen.findByText(mensaje)).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: 'EcoComunidad' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Reintentar' })).toBeInTheDocument()
+    expect(screen.queryByLabelText('Correo')).not.toBeInTheDocument()
+    expect(leerAccess()).toBe('acc-1')
+    expect(leerRefresh()).toBe('ref-1')
+  })
+
+  it('"Reintentar" vuelve a pedir /auth/yo/ y entra si el servidor responde', async () => {
+    guardarSesion({ access: 'acc-1', refresh: 'ref-1' })
+    let conectado = false
+    const adaptador = simularApi({
+      'GET /auth/yo/': (c) => (conectado ? responder(c, 200, ADMIN) : sinConexion(c)),
+    })
+    montar('/tareas')
+    await screen.findByText(mensaje)
+    const pedidosAntes = adaptador.mock.calls.filter(([c]) => c.url === '/auth/yo/').length
+
+    conectado = true
+    fireEvent.click(screen.getByRole('button', { name: 'Reintentar' }))
+
+    expect(await tituloSeccion('Tareas')).toBeInTheDocument()
+    expect(adaptador.mock.calls.filter(([c]) => c.url === '/auth/yo/').length).toBe(pedidosAntes + 1)
+  })
+
+  it('si al reintentar sigue sin conexión, se queda en el aviso', async () => {
+    guardarSesion({ access: 'acc-1', refresh: 'ref-1' })
+    simularApi({ 'GET /auth/yo/': sinConexion })
+    montar('/')
+    await screen.findByText(mensaje)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reintentar' }))
+
+    expect(await screen.findByRole('button', { name: 'Reintentar' })).toBeEnabled()
+    expect(screen.getByText(mensaje)).toBeInTheDocument()
+    expect(leerAccess()).toBe('acc-1')
+  })
+
+  it('si al reintentar el servidor responde 401 y el refresh falla, va al login', async () => {
+    guardarSesion({ access: 'acc-1', refresh: 'ref-1' })
+    let conectado = false
+    simularApi({
+      'GET /auth/yo/': (c) => (conectado ? responder(c, 401) : sinConexion(c)),
+      'POST /auth/refresh/': (c) => responder(c, 401, { detail: 'Token inválido' }),
+    })
+    montar('/')
+    await screen.findByText(mensaje)
+
+    conectado = true
+    fireEvent.click(screen.getByRole('button', { name: 'Reintentar' }))
+
+    expect(await screen.findByRole('heading', { name: 'Inicia sesión' })).toBeInTheDocument()
+    expect(screen.getByText('Tu sesión terminó. Inicia sesión de nuevo.')).toBeInTheDocument()
+    expect(leerAccess()).toBeNull()
+  })
+
+  it('si al reintentar el servidor responde el 403 de estado, va al login con su mensaje', async () => {
+    guardarSesion({ access: 'acc-1', refresh: 'ref-1' })
+    let conectado = false
+    simularApi({
+      'GET /auth/yo/': (c) =>
+        conectado
+          ? responder(c, 403, { detail: 'x', code: 'usuario_inactivo', bloqueado_hasta: null })
+          : sinConexion(c),
+    })
+    montar('/')
+    await screen.findByText(mensaje)
+
+    conectado = true
+    fireEvent.click(screen.getByRole('button', { name: 'Reintentar' }))
+
+    expect(await screen.findByText('Tu cuenta está inactiva. Habla con otro administrador.')).toBeInTheDocument()
+    expect(screen.getByLabelText('Correo')).toBeInTheDocument()
+    expect(leerAccess()).toBeNull()
+  })
+
+  it('si el access venció y el refresh no tiene respuesta, también muestra el aviso', async () => {
+    guardarSesion({ access: 'viejo', refresh: 'ref-1' })
+    simularApi({
+      'GET /auth/yo/': (c) => responder(c, 401),
+      'POST /auth/refresh/': sinConexion,
+    })
+    montar('/')
+
+    expect(await screen.findByText(mensaje)).toBeInTheDocument()
+    expect(leerRefresh()).toBe('ref-1')
   })
 })
