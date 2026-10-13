@@ -1,10 +1,12 @@
 import { lazy, Suspense } from 'react'
 import { Route, Routes } from 'react-router-dom'
+import ProveedorAvisos from './componentes/avisos/ProveedorAvisos.jsx'
 import DisenoPanel from './componentes/DisenoPanel.jsx'
 import { SECCIONES } from './componentes/secciones.js'
 import PaginaLogin from './paginas/PaginaLogin.jsx'
 import PaginaNoEncontrada from './paginas/PaginaNoEncontrada.jsx'
 import PaginaPronto from './paginas/PaginaPronto.jsx'
+import PaginaEditarReporte from './paginas/reportes/editar/PaginaEditarReporte.jsx'
 import PaginaReporte from './paginas/reportes/PaginaReporte.jsx'
 import PaginaReportes from './paginas/reportes/PaginaReportes.jsx'
 import PaginaResumen from './paginas/PaginaResumen.jsx'
@@ -15,33 +17,36 @@ const PaginaMarca = import.meta.env.DEV ? lazy(() => import('./paginas/PaginaMar
 
 export default function App() {
   return (
-    <Routes>
-      <Route element={<RutaPublica />}>
-        <Route path="/login" element={<PaginaLogin />} />
-      </Route>
-
-      <Route element={<RutaProtegida />}>
-        <Route element={<DisenoPanel />}>
-          <Route index element={<PaginaResumen />} />
-          <Route path="/reportes" element={<PaginaReportes />} />
-          <Route path="/reportes/:id" element={<PaginaReporte />} />
-          {SECCIONES.filter(({ ruta }) => ruta !== '/' && ruta !== '/reportes').map(({ ruta }) => (
-            <Route key={ruta} path={ruta} element={<PaginaPronto />} />
-          ))}
+    <ProveedorAvisos>
+      <Routes>
+        <Route element={<RutaPublica />}>
+          <Route path="/login" element={<PaginaLogin />} />
         </Route>
-      </Route>
 
-      {PaginaMarca && (
-        <Route
-          path="/marca"
-          element={
-            <Suspense fallback={null}>
-              <PaginaMarca />
-            </Suspense>
-          }
-        />
-      )}
-      <Route path="*" element={<PaginaNoEncontrada />} />
-    </Routes>
+        <Route element={<RutaProtegida />}>
+          <Route element={<DisenoPanel />}>
+            <Route index element={<PaginaResumen />} />
+            <Route path="/reportes" element={<PaginaReportes />} />
+            <Route path="/reportes/:id" element={<PaginaReporte />} />
+            <Route path="/reportes/:id/editar" element={<PaginaEditarReporte />} />
+            {SECCIONES.filter(({ ruta }) => ruta !== '/' && ruta !== '/reportes').map(({ ruta }) => (
+              <Route key={ruta} path={ruta} element={<PaginaPronto />} />
+            ))}
+          </Route>
+        </Route>
+
+        {PaginaMarca && (
+          <Route
+            path="/marca"
+            element={
+              <Suspense fallback={null}>
+                <PaginaMarca />
+              </Suspense>
+            }
+          />
+        )}
+        <Route path="*" element={<PaginaNoEncontrada />} />
+      </Routes>
+    </ProveedorAvisos>
   )
 }

@@ -1,0 +1,38 @@
+.editar-reporte {
+  max-width: 880px;
+}
+
+.formulario-editar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--espacio-5);
+}
+
+.formulario-editar > * {
+  min-width: 0;
+}
+
+.formulario-editar__original {
+  justify-self: start;
+}
+
+.formulario-editar__coordenadas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--espacio-4);
+}
+
+.formulario-editar__coordenadas input {
+  font-variant-numeric: tabular-nums;
+}
+
+.formulario-editar__pie {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--espacio-3);
+}
+
+.mapa-reporte--editable .marcador-reporte--arrastrable {
+  cursor: grab;
+}

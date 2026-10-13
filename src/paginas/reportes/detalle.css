@@ -13,15 +13,32 @@
   justify-self: start;
 }
 
-/* Contenido + espacio para el panel de acciones (paso 5B) */
+/* Cabecera, panel de acciones y contenido.
+   Pantalla pequeña: una columna (cabecera, acciones, contenido).
+   Pantalla grande: el panel va a la derecha y acompaña al bajar. */
 .detalle__columnas {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    'cabecera'
+    'acciones'
+    'contenido';
   gap: var(--espacio-5);
   align-items: start;
 }
 
+.detalle__cabecera {
+  grid-area: cabecera;
+  min-width: 0;
+}
+
+.detalle__acciones {
+  grid-area: acciones;
+  min-width: 0;
+}
+
 .detalle__principal {
+  grid-area: contenido;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--espacio-5);
@@ -35,19 +52,16 @@
 @media (min-width: 1200px) {
   .detalle__columnas {
     grid-template-columns: minmax(0, 1fr) 300px;
+    grid-template-areas:
+      'cabecera acciones'
+      'contenido acciones';
+    grid-template-rows: auto 1fr;
   }
 
   .detalle__acciones {
     position: sticky;
     top: 96px;
   }
-}
-
-.detalle__acciones {
-  padding: var(--espacio-5);
-  border: 1px dashed var(--borde);
-  border-radius: var(--radio-tarjeta);
-  background: var(--superficie);
 }
 
 /* Encabezado */

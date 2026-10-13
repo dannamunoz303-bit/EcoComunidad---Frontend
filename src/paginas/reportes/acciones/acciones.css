@@ -1,0 +1,58 @@
+.panel-acciones {
+  display: grid;
+  gap: var(--espacio-4);
+  padding: var(--espacio-5);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-tarjeta);
+  background: var(--superficie);
+  box-shadow: var(--sombra-1);
+}
+
+.panel-acciones__titulo {
+  font-size: 1.125rem;
+  color: var(--tinta);
+}
+
+.panel-acciones__grupo {
+  display: grid;
+  gap: var(--espacio-2);
+}
+
+.panel-acciones__grupo > * {
+  width: 100%;
+}
+
+.panel-acciones__nota {
+  font-size: 0.9375rem;
+}
+
+.panel-acciones__enlace {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espacio-2);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+/* Eliminar va aparte de las demás acciones */
+.panel-acciones__peligro {
+  display: grid;
+  padding-top: var(--espacio-4);
+  border-top: 1px solid var(--borde);
+}
+
+/* En pantallas medianas, los botones en fila */
+@media (min-width: 600px) and (max-width: 1199px) {
+  .panel-acciones__grupo {
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  .panel-acciones__grupo > * {
+    width: auto;
+  }
+
+  .panel-acciones__peligro {
+    display: flex;
+  }
+}

@@ -9,6 +9,7 @@ import { useCarga } from '../../utilidades/useCarga.js'
 import GaleriaFotos from './GaleriaFotos.jsx'
 import HistorialTareas from './HistorialTareas.jsx'
 import UbicacionReporte from './UbicacionReporte.jsx'
+import PanelAcciones from './acciones/PanelAcciones.jsx'
 import './detalle.css'
 
 const nombreCompleto = (persona) => (persona ? `${persona.nombre} ${persona.apellido}` : null)
@@ -24,33 +25,39 @@ function Seccion({ id, titulo, children }) {
   )
 }
 
-function DetalleReporte({ reporte, tareas }) {
+function DetalleReporte({ reporte, tareas, desde, alCambiar }) {
   const fotos = (reporte.fotos ?? []).map((foto, i) => ({ ...foto, alt: `Foto ${i + 1} del reporte` }))
   const ciudadano = nombreCompleto(reporte.ciudadano)
   const revisor = nombreCompleto(reporte.revisado_por)
 
+  // Áreas: cabecera, acciones y contenido. En pantalla grande, las acciones van a la derecha;
+  // en pantallas pequeñas, debajo de la cabecera.
   return (
     <div className="detalle__columnas">
-      <div className="detalle__principal">
-        <header className="detalle__cabecera">
-          <div className="detalle__titulo-fila">
-            <h2 className="detalle__titulo">{reporte.titulo}</h2>
-            <EstadoReporte estado={reporte.estado} eliminado={reporte.eliminado} />
-          </div>
-          <p className="detalle__meta">
-            <span>Reporte #{reporte.id}</span>
+      <header className="detalle__cabecera">
+        <div className="detalle__titulo-fila">
+          <h2 className="detalle__titulo">{reporte.titulo}</h2>
+          <EstadoReporte estado={reporte.estado} eliminado={reporte.eliminado} />
+        </div>
+        <p className="detalle__meta">
+          <span>Reporte #{reporte.id}</span>
+          <span>
+            Creado el <time dateTime={reporte.fecha_creacion}>{formatearFechaHora(reporte.fecha_creacion)}</time>
+          </span>
+          {reporte.fecha_actualizacion && (
             <span>
-              Creado el <time dateTime={reporte.fecha_creacion}>{formatearFechaHora(reporte.fecha_creacion)}</time>
+              Última actualización:{' '}
+              <time dateTime={reporte.fecha_actualizacion}>{formatearFechaHora(reporte.fecha_actualizacion)}</time>
             </span>
-            {reporte.fecha_actualizacion && (
-              <span>
-                Última actualización:{' '}
-                <time dateTime={reporte.fecha_actualizacion}>{formatearFechaHora(reporte.fecha_actualizacion)}</time>
-              </span>
-            )}
-          </p>
-        </header>
+          )}
+        </p>
+      </header>
 
+      <aside className="detalle__acciones" aria-label="Acciones del reporte">
+        <PanelAcciones reporte={reporte} desde={desde} alCambiar={alCambiar} />
+      </aside>
+
+      <div className="detalle__principal">
         {reporte.eliminado && (
           <p className="aviso aviso--gris">
             <Trash2 size={20} aria-hidden="true" />
@@ -119,10 +126,6 @@ function DetalleReporte({ reporte, tareas }) {
           />
         </Seccion>
       </div>
-
-      <aside className="detalle__acciones" aria-label="Acciones del reporte">
-        <p className="texto-suave">Acciones del reporte (próximo paso)</p>
-      </aside>
     </div>
   )
 }
@@ -136,9 +139,21 @@ export default function PaginaReporte() {
   const cargarTareas = useCallback(() => obtenerTareasDeReporte(id), [id])
   const reporte = useCarga(cargarReporte)
   const tareas = useCarga(cargarTareas)
+  const recargarReporte = reporte.reintentar
+  const recargarTareas = tareas.reintentar
+
+  // Tras una acción: recarga el detalle y sus tareas, sin quitar lo que ya se ve.
+  const recargar = useCallback(() => {
+    recargarReporte()
+    recargarTareas()
+  }, [recargarReporte, recargarTareas])
 
   let contenido
-  if (reporte.cargando) {
+  if (reporte.datos) {
+    contenido = (
+      <DetalleReporte reporte={reporte.datos} tareas={tareas} desde={state?.desde ?? ''} alCambiar={recargar} />
+    )
+  } else if (reporte.cargando) {
     contenido = (
       <div className="detalle__siluetas" aria-busy="true" data-testid="siluetas-detalle">
         <span className="silueta-fila__bloque silueta-fila__bloque--largo" />
@@ -156,7 +171,7 @@ export default function PaginaReporte() {
         </Link>
       </div>
     )
-  } else if (reporte.error) {
+  } else {
     contenido = (
       <div className="detalle__error">
         <p role="alert">No pudimos cargar el reporte.</p>
@@ -166,8 +181,6 @@ export default function PaginaReporte() {
         </button>
       </div>
     )
-  } else {
-    contenido = <DetalleReporte reporte={reporte.datos} tareas={tareas} />
   }
 
   return (

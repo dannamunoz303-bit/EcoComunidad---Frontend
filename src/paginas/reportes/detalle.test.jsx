@@ -99,7 +99,7 @@ describe('Detalle del reporte', () => {
 
     expect(screen.getByText('Calle 10 # 5-20')).toBeInTheDocument()
     expect(screen.getByText('Frente a la cancha')).toBeInTheDocument()
-    expect(screen.getByText('Acciones del reporte (próximo paso)')).toBeInTheDocument()
+    expect(screen.getByRole('complementary', { name: 'Acciones del reporte' })).toBeInTheDocument()
   })
 
   it('muestra el aviso de rechazo con su motivo', async () => {

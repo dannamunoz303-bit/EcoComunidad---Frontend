@@ -88,16 +88,6 @@
   min-width: 0;
 }
 
-.campo select {
-  width: 100%;
-  min-height: 46px;
-  padding: var(--espacio-2) var(--espacio-4);
-  border: 1px solid var(--borde);
-  border-radius: var(--radio-campo);
-  background: var(--superficie);
-  color: var(--tinta);
-}
-
 .campo__con-icono {
   position: relative;
 }

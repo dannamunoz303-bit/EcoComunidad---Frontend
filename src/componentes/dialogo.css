@@ -1,0 +1,122 @@
+.dialogo {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  display: grid;
+  place-items: center;
+  padding: var(--espacio-4);
+}
+
+.dialogo__fondo {
+  position: absolute;
+  inset: 0;
+  background: rgb(20 33 26 / 0.5);
+}
+
+.dialogo__caja {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  width: min(100%, 480px);
+  max-height: calc(100vh - 32px);
+  border-radius: var(--radio-tarjeta);
+  background: var(--superficie);
+  box-shadow: var(--sombra-3);
+}
+
+.dialogo__caja--grande {
+  width: min(100%, 760px);
+}
+
+.dialogo__cabecera {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--espacio-3);
+  padding: var(--espacio-5) var(--espacio-5) var(--espacio-3) var(--espacio-6);
+}
+
+.dialogo__titulo {
+  font-size: 1.25rem;
+  color: var(--tinta);
+}
+
+.dialogo__cerrar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  margin: -6px -6px 0 0;
+  border: 0;
+  border-radius: var(--radio-boton);
+  background: transparent;
+  color: var(--tinta-suave);
+}
+
+.dialogo__cerrar:hover:not(:disabled) {
+  background: var(--fondo);
+  color: var(--tinta);
+}
+
+.dialogo__cerrar:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.dialogo__cuerpo {
+  display: grid;
+  gap: var(--espacio-4);
+  align-content: start;
+  min-height: 0;
+  padding: 0 var(--espacio-6) var(--espacio-4);
+  overflow-y: auto;
+  color: var(--tinta);
+}
+
+.dialogo__pie {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--espacio-3);
+  padding: var(--espacio-4) var(--espacio-6) var(--espacio-5);
+  border-top: 1px solid var(--borde);
+}
+
+@media (max-width: 599px) {
+  .dialogo__cabecera {
+    padding: var(--espacio-4) var(--espacio-4) var(--espacio-3) var(--espacio-5);
+  }
+
+  .dialogo__cuerpo {
+    padding: 0 var(--espacio-5) var(--espacio-4);
+  }
+
+  .dialogo__pie {
+    padding: var(--espacio-4) var(--espacio-5);
+  }
+
+  .dialogo__pie > * {
+    flex: 1 1 auto;
+  }
+}
+
+/* Error dentro de un diálogo o formulario */
+.error-accion {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--espacio-2);
+  margin: 0;
+  padding: var(--espacio-3) var(--espacio-4);
+  border: 1px solid var(--arcilla);
+  border-left-width: 4px;
+  border-radius: var(--radio-campo);
+  background: var(--superficie);
+  color: var(--arcilla);
+  font-weight: 500;
+}
+
+.error-accion svg {
+  flex: none;
+  margin-top: 2px;
+}
