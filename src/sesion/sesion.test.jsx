@@ -1,0 +1,326 @@
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { AxiosError } from 'axios'
+import { MemoryRouter } from 'react-router-dom'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import cliente from '../api/cliente.js'
+import { guardarSesion, leerAccess, leerRefresh } from '../api/sesion.js'
+import App from '../App.jsx'
+import ProveedorSesion from './ProveedorSesion.jsx'
+
+// ---- API simulada: el adaptador de axios responde sin llamar al backend ----
+
+const ADMIN = { id: 1, nombre: 'Laura', apellido: 'Gómez', correo: 'laura@eco.co', rol: 'administrador' }
+
+function responder(config, status, data = {}) {
+  const respuesta = { data, status, statusText: '', headers: {}, config }
+  if (status >= 200 && status < 300) return Promise.resolve(respuesta)
+  return Promise.reject(new AxiosError(`Error ${status}`, AxiosError.ERR_BAD_RESPONSE, config, null, respuesta))
+}
+
+const sinConexion = (config) => Promise.reject(new AxiosError('Network Error', AxiosError.ERR_NETWORK, config, {}))
+
+// rutas: { 'POST /auth/login/': (config) => Promise, ... }
+function simularApi(rutas) {
+  const adaptador = vi.fn((config) => {
+    const clave = `${config.method.toUpperCase()} ${config.url}`
+    const manejador = rutas[clave]
+    if (!manejador) return responder(config, 404, { detail: `Sin simular: ${clave}` })
+    return manejador(config)
+  })
+  cliente.defaults.adapter = adaptador
+  return adaptador
+}
+
+const loginCorrecto = (usuario = ADMIN) => ({
+  'POST /auth/login/': (c) => responder(c, 200, { access: 'acc-1', refresh: 'ref-1' }),
+  'GET /auth/yo/': (c) => responder(c, 200, usuario),
+})
+
+function montar(ruta = '/') {
+  return render(
+    <MemoryRouter initialEntries={[ruta]}>
+      <ProveedorSesion>
+        <App />
+      </ProveedorSesion>
+    </MemoryRouter>,
+  )
+}
+
+async function ingresar(correo = 'laura@eco.co', password = 'clave-segura-1') {
+  fireEvent.change(await screen.findByLabelText('Correo'), { target: { value: correo } })
+  fireEvent.change(screen.getByLabelText('Contraseña'), { target: { value: password } })
+  fireEvent.click(screen.getByRole('button', { name: 'Ingresar' }))
+}
+
+const tituloSeccion = (nombre) => screen.findByRole('heading', { level: 1, name: nombre })
+
+beforeEach(() => {
+  simularApi({})
+})
+
+// ---- Pruebas ----
+
+describe('login', () => {
+  it('un administrador entra y llega al Resumen', async () => {
+    const adaptador = simularApi(loginCorrecto())
+    montar('/login')
+
+    await ingresar()
+
+    expect(await tituloSeccion('Resumen')).toBeInTheDocument()
+    expect(screen.getByText('Laura Gómez')).toBeInTheDocument()
+    expect(leerAccess()).toBe('acc-1')
+    expect(leerRefresh()).toBe('ref-1')
+    const login = adaptador.mock.calls.find(([c]) => c.url === '/auth/login/')[0]
+    expect(JSON.parse(login.data)).toEqual({ correo: 'laura@eco.co', password: 'clave-segura-1' })
+  })
+
+  it('mientras espera, el botón dice "Ingresando…" y está desactivado', async () => {
+    let soltar
+    simularApi({
+      ...loginCorrecto(),
+      'POST /auth/login/': (c) =>
+        new Promise((resolve) => {
+          soltar = () => resolve(responder(c, 200, { access: 'a', refresh: 'r' }))
+        }),
+    })
+    montar('/login')
+
+    await ingresar()
+
+    const boton = await screen.findByRole('button', { name: 'Ingresando…' })
+    expect(boton).toBeDisabled()
+    await act(async () => soltar())
+    expect(await tituloSeccion('Resumen')).toBeInTheDocument()
+  })
+
+  it.each([
+    ['401', (c) => responder(c, 401, { detail: 'No active account' }), 'Correo o contraseña incorrectos.'],
+    [
+      'usuario_inactivo',
+      (c) => responder(c, 403, { detail: 'x', code: 'usuario_inactivo', bloqueado_hasta: null }),
+      'Tu cuenta está inactiva. Habla con otro administrador.',
+    ],
+    [
+      'usuario_bloqueado',
+      (c) =>
+        responder(c, 403, { detail: 'x', code: 'usuario_bloqueado', bloqueado_hasta: '2026-10-15T15:00:00-05:00' }),
+      'Tu cuenta está bloqueada hasta el 15 de octubre de 2026, 3:00 p. m.',
+    ],
+    [
+      'usuario_bloqueado_permanente',
+      (c) => responder(c, 403, { detail: 'x', code: 'usuario_bloqueado_permanente', bloqueado_hasta: null }),
+      'Tu cuenta está bloqueada de forma permanente.',
+    ],
+    ['sin conexión', sinConexion, 'No pudimos conectar con el servidor. Revisa tu conexión e intenta de nuevo.'],
+  ])('error %s muestra su mensaje', async (_caso, respuestaLogin, mensaje) => {
+    simularApi({ 'POST /auth/login/': respuestaLogin })
+    montar('/login')
+
+    await ingresar()
+
+    const aviso = await screen.findByText(mensaje)
+    expect(aviso.closest('[aria-live]')).toBeInTheDocument()
+    expect(screen.queryByRole('img', { name: /Brotico/ })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Ingresar' })).toBeEnabled()
+    expect(leerAccess()).toBeNull()
+  })
+
+  it('la fecha del bloqueo sale en hora de Colombia aunque venga en UTC', async () => {
+    simularApi({
+      'POST /auth/login/': (c) =>
+        responder(c, 403, { detail: 'x', code: 'usuario_bloqueado', bloqueado_hasta: '2026-10-16T01:30:00Z' }),
+    })
+    montar('/login')
+
+    await ingresar()
+
+    expect(await screen.findByText('Tu cuenta está bloqueada hasta el 15 de octubre de 2026, 8:30 p. m.')).toBeInTheDocument()
+  })
+
+  it.each(['ciudadano', 'gestor'])('un %s no entra y ve que el panel es solo para administradores', async (rol) => {
+    simularApi(loginCorrecto({ ...ADMIN, rol }))
+    montar('/login')
+
+    await ingresar()
+
+    expect(
+      await screen.findByText('Este panel es solo para administradores. Usa la app móvil.'),
+    ).toBeInTheDocument()
+    expect(leerAccess()).toBeNull()
+    expect(leerRefresh()).toBeNull()
+
+    // Tampoco puede abrir una ruta protegida después.
+    montar('/reportes')
+    expect(screen.queryByRole('heading', { level: 1, name: 'Reportes' })).not.toBeInTheDocument()
+  })
+
+  it('el botón de la contraseña la muestra y la oculta', async () => {
+    montar('/login')
+    const campo = await screen.findByLabelText('Contraseña')
+    expect(campo).toHaveAttribute('type', 'password')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Mostrar contraseña' }))
+    expect(campo).toHaveAttribute('type', 'text')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Ocultar contraseña' }))
+    expect(campo).toHaveAttribute('type', 'password')
+  })
+
+  it('con sesión de administrador, /login lleva al Resumen', async () => {
+    guardarSesion({ access: 'acc-1', refresh: 'ref-1' })
+    simularApi(loginCorrecto())
+    montar('/login')
+
+    expect(await tituloSeccion('Resumen')).toBeInTheDocument()
+  })
+})
+
+describe('sesión', () => {
+  it('sin sesión, una ruta protegida lleva a /login', async () => {
+    montar('/reportes')
+    expect(await screen.findByRole('heading', { name: 'Inicia sesión' })).toBeInTheDocument()
+  })
+
+  it('con tokens, comprueba /auth/yo/ mostrando el logo y luego abre la sección', async () => {
+    guardarSesion({ access: 'acc-1', refresh: 'ref-1' })
+    const adaptador = simularApi(loginCorrecto())
+    montar('/tareas')
+
+    expect(screen.getByRole('status')).toBeInTheDocument()
+    expect(screen.queryByLabelText('Correo')).not.toBeInTheDocument()
+    expect(await tituloSeccion('Tareas')).toBeInTheDocument()
+    expect(screen.getByText('Esta sección llega pronto.')).toBeInTheDocument()
+    expect(adaptador.mock.calls.some(([c]) => c.url === '/auth/yo/')).toBe(true)
+  })
+
+  it('un gestor con tokens guardados no entra', async () => {
+    guardarSesion({ access: 'acc-1', refresh: 'ref-1' })
+    simularApi(loginCorrecto({ ...ADMIN, rol: 'gestor' }))
+    montar('/')
+
+    expect(
+      await screen.findByText('Este panel es solo para administradores. Usa la app móvil.'),
+    ).toBeInTheDocument()
+    expect(leerAccess()).toBeNull()
+  })
+
+  it('el evento "sesion-cerrada" lleva a /login con el motivo', async () => {
+    guardarSesion({ access: 'acc-1', refresh: 'ref-1' })
+    simularApi(loginCorrecto())
+    montar('/reportes')
+    await tituloSeccion('Reportes')
+
+    act(() => {
+      window.dispatchEvent(
+        new CustomEvent('sesion-cerrada', {
+          detail: { mensaje: 'x', code: 'usuario_bloqueado_permanente', bloqueadoHasta: null },
+        }),
+      )
+    })
+
+    expect(await screen.findByRole('heading', { name: 'Inicia sesión' })).toBeInTheDocument()
+    expect(screen.getByText('Tu cuenta está bloqueada de forma permanente.')).toBeInTheDocument()
+    expect(leerAccess()).toBeNull()
+  })
+
+  it('un 403 de estado en una petición cierra la sesión y lleva a /login', async () => {
+    guardarSesion({ access: 'acc-1', refresh: 'ref-1' })
+    simularApi({
+      'GET /auth/yo/': (c) => responder(c, 403, { detail: 'x', code: 'usuario_inactivo', bloqueado_hasta: null }),
+    })
+    montar('/')
+
+    expect(await screen.findByText('Tu cuenta está inactiva. Habla con otro administrador.')).toBeInTheDocument()
+    expect(leerAccess()).toBeNull()
+  })
+
+  it('cerrar sesión borra los tokens y lleva a /login', async () => {
+    guardarSesion({ access: 'acc-1', refresh: 'ref-1' })
+    simularApi(loginCorrecto())
+    montar('/')
+    await tituloSeccion('Resumen')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cerrar sesión' }))
+
+    expect(await screen.findByRole('heading', { name: 'Inicia sesión' })).toBeInTheDocument()
+    expect(leerAccess()).toBeNull()
+    expect(leerRefresh()).toBeNull()
+  })
+})
+
+describe('diseño del panel', () => {
+  it('marca la sección activa en la barra lateral', async () => {
+    guardarSesion({ access: 'acc-1', refresh: 'ref-1' })
+    simularApi(loginCorrecto())
+    montar('/sanciones')
+    await tituloSeccion('Sanciones')
+
+    expect(screen.getByRole('link', { name: 'Sanciones' })).toHaveAttribute('aria-current', 'page')
+    expect(screen.getByRole('link', { name: 'Resumen' })).not.toHaveAttribute('aria-current')
+  })
+
+  it('el botón de menú abre y cierra la barra lateral', async () => {
+    guardarSesion({ access: 'acc-1', refresh: 'ref-1' })
+    simularApi(loginCorrecto())
+    montar('/')
+    await tituloSeccion('Resumen')
+
+    const menu = screen.getByRole('button', { name: 'Abrir menú' })
+    expect(menu).toHaveAttribute('aria-expanded', 'false')
+    fireEvent.click(menu)
+    expect(menu).toHaveAttribute('aria-expanded', 'true')
+    fireEvent.keyDown(window, { key: 'Escape' })
+    expect(menu).toHaveAttribute('aria-expanded', 'false')
+  })
+})
+
+describe('bienvenida', () => {
+  const textoBienvenida = '¡Hola de nuevo, Laura! Tu barrio te está esperando.'
+
+  it('sale una vez tras iniciar sesión y no vuelve al cerrarla', async () => {
+    simularApi(loginCorrecto())
+    const { unmount } = montar('/login')
+    await ingresar()
+
+    expect(await screen.findByText(textoBienvenida)).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: 'Brotico saludando' })).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cerrar bienvenida' }))
+    expect(screen.queryByText(textoBienvenida)).not.toBeInTheDocument()
+
+    // Ir a otra sección y volver
+    fireEvent.click(screen.getByRole('link', { name: 'Reportes' }))
+    await tituloSeccion('Reportes')
+    fireEvent.click(screen.getByRole('link', { name: 'Resumen' }))
+    await tituloSeccion('Resumen')
+    expect(screen.queryByText(textoBienvenida)).not.toBeInTheDocument()
+
+    // Recargar la app con la misma sesión
+    unmount()
+    montar('/')
+    await tituloSeccion('Resumen')
+    expect(screen.queryByText(textoBienvenida)).not.toBeInTheDocument()
+  })
+
+  it('vuelve a salir en el siguiente inicio de sesión', async () => {
+    simularApi(loginCorrecto())
+    montar('/login')
+    await ingresar()
+    fireEvent.click(await screen.findByRole('button', { name: 'Cerrar bienvenida' }))
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cerrar sesión' }))
+    await ingresar()
+
+    expect(await screen.findByText(textoBienvenida)).toBeInTheDocument()
+  })
+
+  it('no sale si la sesión ya existía al abrir la app', async () => {
+    guardarSesion({ access: 'acc-1', refresh: 'ref-1' })
+    simularApi(loginCorrecto())
+    montar('/')
+    await tituloSeccion('Resumen')
+
+    await waitFor(() => expect(screen.queryByText(textoBienvenida)).not.toBeInTheDocument())
+  })
+})

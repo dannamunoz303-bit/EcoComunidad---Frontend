@@ -84,28 +84,50 @@ describe('interceptor de la API', () => {
     expect(adaptador.mock.calls.filter(([c]) => esRefresh(c))).toHaveLength(1)
   })
 
-  it('un 403 por usuario bloqueado cierra la sesión con el mensaje del backend', async () => {
+  it.each([
+    ['usuario_inactivo', null],
+    ['usuario_bloqueado', '2026-10-20T08:00:00-05:00'],
+    ['usuario_bloqueado_permanente', null],
+  ])('un 403 con code "%s" cierra la sesión y pasa los datos del backend', async (code, bloqueadoHasta) => {
     guardarSesion({ access: 'acc-1', refresh: 'ref-1' })
-    const detail = 'Tu cuenta está bloqueada hasta el 20/10/2026.'
-    adaptador.mockImplementation((config) => responder(config, 403, { detail }))
+    const detail = 'Texto del backend'
+    adaptador.mockImplementation((config) =>
+      responder(config, 403, { detail, code, bloqueado_hasta: bloqueadoHasta }),
+    )
 
     await expect(cliente.get('/reportes/')).rejects.toMatchObject({ response: { status: 403 } })
 
     expect(leerAccess()).toBeNull()
+    expect(leerRefresh()).toBeNull()
     expect(alCerrarSesion).toHaveBeenCalledTimes(1)
-    expect(alCerrarSesion.mock.calls[0][0].detail.mensaje).toBe(detail)
+    expect(alCerrarSesion.mock.calls[0][0].detail).toEqual({ mensaje: detail, code, bloqueadoHasta })
   })
 
-  it('un 403 de permisos normal no cierra la sesión', async () => {
+  it('un 403 sin code de estado no cierra la sesión, aunque el texto hable de bloqueo', async () => {
     guardarSesion({ access: 'acc-1', refresh: 'ref-1' })
     adaptador.mockImplementation((config) =>
-      responder(config, 403, { detail: 'No tiene permiso para realizar esta acción.' }),
+      responder(config, 403, { detail: 'No puedes editar un reporte bloqueado.' }),
     )
 
     await expect(cliente.get('/reportes/')).rejects.toBeTruthy()
 
     expect(leerAccess()).toBe('acc-1')
     expect(alCerrarSesion).not.toHaveBeenCalled()
+  })
+
+  it('si el refresh responde 403 de estado, el aviso lleva el code', async () => {
+    guardarSesion({ access: 'viejo', refresh: 'ref-1' })
+    adaptador.mockImplementation((config) =>
+      esRefresh(config)
+        ? responder(config, 403, { detail: 'x', code: 'usuario_inactivo', bloqueado_hasta: null })
+        : responder(config, 401),
+    )
+
+    await expect(cliente.get('/reportes/')).rejects.toBeTruthy()
+
+    expect(leerRefresh()).toBeNull()
+    expect(alCerrarSesion).toHaveBeenCalledTimes(1)
+    expect(alCerrarSesion.mock.calls[0][0].detail.code).toBe('usuario_inactivo')
   })
 
   it('un 401 en el login no intenta refresh', async () => {

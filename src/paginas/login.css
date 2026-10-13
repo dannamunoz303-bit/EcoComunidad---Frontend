@@ -1,0 +1,90 @@
+.login {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+/* Panel de marca: solo en pantallas grandes */
+.login__marca {
+  display: none;
+}
+
+.login__principal {
+  display: grid;
+  place-items: center;
+  padding: var(--espacio-6) var(--espacio-4);
+}
+
+.login__contenido {
+  width: 100%;
+  max-width: 400px;
+  display: grid;
+  justify-items: center;
+  gap: var(--espacio-5);
+}
+
+.login__formulario {
+  width: 100%;
+  display: grid;
+  gap: var(--espacio-4);
+  padding: var(--espacio-6) var(--espacio-5);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-tarjeta);
+  background: var(--superficie);
+  box-shadow: var(--sombra-2);
+}
+
+.login__titulo {
+  font-size: 1.5rem;
+}
+
+.login__aviso-zona:empty {
+  display: none;
+}
+
+.login__aviso {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--espacio-2);
+  padding: var(--espacio-3) var(--espacio-4);
+  border: 1px solid var(--arcilla);
+  border-left-width: 4px;
+  border-radius: var(--radio-campo);
+  background: var(--superficie);
+  color: var(--arcilla);
+  font-weight: 500;
+}
+
+.login__aviso svg {
+  flex: none;
+  margin-top: 2px;
+}
+
+.login__ingresar {
+  width: 100%;
+  margin-top: var(--espacio-2);
+}
+
+@media (min-width: 900px) {
+  .login {
+    grid-template-columns: minmax(360px, 5fr) 7fr;
+  }
+
+  .login__marca {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: var(--espacio-7);
+    background: var(--verde-bosque);
+    color: var(--superficie);
+  }
+
+  .login__frase {
+    max-width: 14ch;
+    font-family: var(--fuente-titulos);
+    font-weight: 700;
+    font-size: clamp(2rem, 3.4vw, 3rem);
+    line-height: 1.1;
+    color: var(--superficie);
+  }
+}

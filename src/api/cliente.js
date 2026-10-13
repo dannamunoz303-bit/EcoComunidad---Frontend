@@ -3,6 +3,9 @@ import { borrarSesion, guardarSesion, haySesion, leerAccess, leerRefresh } from 
 
 export const EVENTO_SESION_CERRADA = 'sesion-cerrada'
 
+// Códigos del 403 por estado del usuario (ecocomunidad.md, sección 14).
+export const CODIGOS_ESTADO_DENEGADO = ['usuario_inactivo', 'usuario_bloqueado', 'usuario_bloqueado_permanente']
+
 const RUTA_LOGIN = '/auth/login/'
 const RUTA_REFRESH = '/auth/refresh/'
 
@@ -10,25 +13,25 @@ const cliente = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
 })
 
-// Texto de error que manda el backend (DRF usa "detail").
-export function mensajeDelBackend(data) {
-  if (!data) return null
-  if (typeof data === 'string') return data
-  return data.detail ?? data.mensaje ?? data.error ?? null
-}
-
-// 403 por usuario inactivo o con bloqueo vigente (ecocomunidad.md, sección 14).
-function esUsuarioInactivoOBloqueado(data) {
-  const mensaje = mensajeDelBackend(data)
-  return typeof mensaje === 'string' && /inactiv|bloque/i.test(mensaje)
+export function esEstadoDenegado(data) {
+  return CODIGOS_ESTADO_DENEGADO.includes(data?.code)
 }
 
 // Borra los tokens y avisa a la app. Solo avisa si había sesión,
 // así varias respuestas fallidas a la vez generan un único aviso.
-export function cerrarSesion(mensaje = null) {
+// `datos` es el cuerpo del 403 de estado: { detail, code, bloqueado_hasta }.
+export function cerrarSesion(datos = null) {
   if (!haySesion()) return
   borrarSesion()
-  window.dispatchEvent(new CustomEvent(EVENTO_SESION_CERRADA, { detail: { mensaje } }))
+  window.dispatchEvent(
+    new CustomEvent(EVENTO_SESION_CERRADA, {
+      detail: {
+        mensaje: datos?.detail ?? null,
+        code: datos?.code ?? null,
+        bloqueadoHasta: datos?.bloqueado_hasta ?? null,
+      },
+    }),
+  )
 }
 
 const esRuta = (config, ruta) => (config.url ?? '').endsWith(ruta)
@@ -50,7 +53,7 @@ function renovarAccess() {
       })
       .catch((error) => {
         const data = error.response?.data
-        cerrarSesion(error.response?.status === 403 ? mensajeDelBackend(data) : null)
+        cerrarSesion(esEstadoDenegado(data) ? data : null)
         throw error
       })
       .finally(() => {
@@ -76,8 +79,8 @@ cliente.interceptors.response.use(
       throw error
     }
 
-    if (response.status === 403 && esUsuarioInactivoOBloqueado(response.data)) {
-      cerrarSesion(mensajeDelBackend(response.data))
+    if (response.status === 403 && esEstadoDenegado(response.data)) {
+      cerrarSesion(response.data)
       throw error
     }
 
