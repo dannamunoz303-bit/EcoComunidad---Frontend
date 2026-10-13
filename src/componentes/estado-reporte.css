@@ -56,8 +56,27 @@
   background: var(--fondo);
 }
 
+/* Estados de la tarea */
+.estado-tarea--asignada {
+  --color-estado: var(--verde-musgo);
+}
+
+.estado-tarea--en_proceso {
+  --color-estado: var(--verde-hoja);
+}
+
+.estado-tarea--terminada {
+  --color-estado: var(--verde-bosque);
+}
+
+.estado-tarea--cancelada {
+  --color-estado: var(--tinta-suave);
+  background: var(--fondo);
+}
+
 /* En proceso: el punto late para indicar actividad */
-.estado-reporte--en_proceso .estado-reporte__punto {
+.estado-reporte--en_proceso .estado-reporte__punto,
+.estado-tarea--en_proceso .estado-reporte__punto {
   box-shadow: 0 0 0 0 color-mix(in srgb, var(--verde-hoja) 60%, transparent);
   animation: estado-actividad 1.6s ease-out infinite;
 }
@@ -72,7 +91,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .estado-reporte--en_proceso .estado-reporte__punto {
+  .estado-reporte--en_proceso .estado-reporte__punto,
+  .estado-tarea--en_proceso .estado-reporte__punto {
     animation: none;
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--verde-hoja) 35%, transparent);
   }

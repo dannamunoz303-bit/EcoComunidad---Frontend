@@ -10,10 +10,14 @@ import PaginaEditarReporte from './paginas/reportes/editar/PaginaEditarReporte.j
 import PaginaReporte from './paginas/reportes/PaginaReporte.jsx'
 import PaginaReportes from './paginas/reportes/PaginaReportes.jsx'
 import PaginaResumen from './paginas/PaginaResumen.jsx'
+import PaginaTareas from './paginas/tareas/PaginaTareas.jsx'
 import { RutaProtegida, RutaPublica } from './sesion/RutasSesion.jsx'
 
 // Solo en desarrollo: en el build de producción esta página no se incluye.
 const PaginaMarca = import.meta.env.DEV ? lazy(() => import('./paginas/PaginaMarca.jsx')) : null
+
+// Secciones que ya tienen su página; las demás muestran "Esta sección llega pronto."
+const HECHAS = ['/', '/reportes', '/tareas']
 
 export default function App() {
   return (
@@ -29,7 +33,8 @@ export default function App() {
             <Route path="/reportes" element={<PaginaReportes />} />
             <Route path="/reportes/:id" element={<PaginaReporte />} />
             <Route path="/reportes/:id/editar" element={<PaginaEditarReporte />} />
-            {SECCIONES.filter(({ ruta }) => ruta !== '/' && ruta !== '/reportes').map(({ ruta }) => (
+            <Route path="/tareas" element={<PaginaTareas />} />
+            {SECCIONES.filter(({ ruta }) => !HECHAS.includes(ruta)).map(({ ruta }) => (
               <Route key={ruta} path={ruta} element={<PaginaPronto />} />
             ))}
           </Route>

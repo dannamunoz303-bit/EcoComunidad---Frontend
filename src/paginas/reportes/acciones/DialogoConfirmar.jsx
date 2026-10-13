@@ -9,6 +9,7 @@ export default function DialogoConfirmar({
   textoBoton,
   textoEnviando,
   peligro = false,
+  textoDescartar = 'Cancelar',
   accion,
   alCerrar,
   alTerminar,
@@ -28,7 +29,7 @@ export default function DialogoConfirmar({
       pie={
         <>
           <button type="button" className="boton-secundario" onClick={alCerrar} disabled={enviando}>
-            Cancelar
+            {textoDescartar}
           </button>
           <button
             type="button"

@@ -82,18 +82,16 @@ describe('Panel de acciones: botones por estado', () => {
   it.each([
     ['pendiente', ['Aprobar', 'Rechazar', 'Editar', 'Eliminar']],
     ['rechazado', ['Devolver a pendiente', 'Sancionar a Ana Pérez', 'Eliminar']],
-    ['aprobado', ['Editar', 'Eliminar']],
-    ['asignado', ['Editar', 'Eliminar']],
-    ['en_proceso', ['Editar', 'Eliminar']],
+    ['aprobado', ['Asignar gestor', 'Editar', 'Eliminar']],
+    ['asignado', ['Sumar otro gestor', 'Editar', 'Eliminar']],
+    ['en_proceso', ['Sumar otro gestor', 'Editar', 'Eliminar']],
     ['resuelto', ['Reabrir', 'Editar', 'Eliminar']],
   ])('%s muestra solo sus acciones', async (estado, esperadas) => {
     abrir({ estado })
     const contenedor = await panel()
 
     expect(nombresDeAcciones(contenedor).sort()).toEqual([...esperadas].sort())
-    const nota = within(contenedor).queryByText('Asignar gestores llega en el próximo paso.')
-    if (['aprobado', 'asignado', 'en_proceso'].includes(estado)) expect(nota).toBeInTheDocument()
-    else expect(nota).not.toBeInTheDocument()
+    expect(within(contenedor).queryByText(/llega en el próximo paso/)).not.toBeInTheDocument()
   })
 
   it('eliminado no muestra botones', async () => {

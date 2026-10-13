@@ -264,3 +264,21 @@ a {
   font-size: 0.875rem;
   font-weight: 500;
 }
+
+/* Campo con ícono a la izquierda (buscadores) */
+.campo__con-icono {
+  position: relative;
+}
+
+.campo__con-icono svg {
+  position: absolute;
+  top: 50%;
+  left: var(--espacio-4);
+  transform: translateY(-50%);
+  color: var(--tinta-suave);
+  pointer-events: none;
+}
+
+.campo__con-icono input {
+  padding-left: 44px;
+}

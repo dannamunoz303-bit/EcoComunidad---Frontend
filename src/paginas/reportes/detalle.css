@@ -310,16 +310,6 @@
   color: var(--tinta);
 }
 
-.estado-tarea {
-  padding: 2px 10px;
-  border: 1px solid var(--borde);
-  border-radius: var(--radio-boton);
-  background: var(--fondo);
-  color: var(--tinta);
-  font-size: 0.8125rem;
-  font-weight: 600;
-}
-
 .tarea__fechas {
   display: flex;
   flex-wrap: wrap;

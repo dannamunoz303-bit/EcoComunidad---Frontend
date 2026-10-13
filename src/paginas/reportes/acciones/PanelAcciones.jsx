@@ -1,26 +1,29 @@
-import { Check, Gavel, Pencil, RotateCcw, Trash2, Undo2, X } from 'lucide-react'
+import { Check, Gavel, Pencil, RotateCcw, Trash2, Undo2, UserPlus, X } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { aprobarReporte, devolverAPendiente, eliminarReporte, reabrirReporte } from '../../../api/reportes.js'
+import { asignarTarea } from '../../../api/tareas.js'
 import { useAvisos } from '../../../componentes/avisos/useAvisos.js'
+import DialogoElegirGestor from '../../tareas/DialogoElegirGestor.jsx'
 import DialogoConfirmar from './DialogoConfirmar.jsx'
 import DialogoRechazar from './DialogoRechazar.jsx'
 import './acciones.css'
 
 // Acciones válidas en cada estado (ecocomunidad.md, sección 6.1, RN-08, RN-09 y RN-17).
 // "Eliminar" vale en todos mientras el reporte no esté eliminado.
+// Asignar vale en aprobado, asignado y en proceso (RN-11).
 const ACCIONES_POR_ESTADO = {
   pendiente: ['aprobar', 'rechazar', 'editar'],
   rechazado: ['devolver'],
-  aprobado: ['editar'],
-  asignado: ['editar'],
-  en_proceso: ['editar'],
+  aprobado: ['asignar', 'editar'],
+  asignado: ['asignar', 'editar'],
+  en_proceso: ['asignar', 'editar'],
   resuelto: ['reabrir', 'editar'],
 }
 
-const ESTADOS_CON_ASIGNACION = ['aprobado', 'asignado', 'en_proceso']
+const ESTADOS_TAREA_ACTIVA = ['asignada', 'en_proceso']
 
-export default function PanelAcciones({ reporte, desde, alCambiar }) {
+export default function PanelAcciones({ reporte, tareas, desde, alCambiar }) {
   const { mostrarAviso } = useAvisos()
   const [abierto, setAbierto] = useState(null)
   const ciudadano = reporte.ciudadano ? `${reporte.ciudadano.nombre} ${reporte.ciudadano.apellido}` : null
@@ -44,12 +47,36 @@ export default function PanelAcciones({ reporte, desde, alCambiar }) {
 
   const acciones = ACCIONES_POR_ESTADO[reporte.estado] ?? []
   const puede = (accion) => acciones.includes(accion)
+  // Con un gestor ya trabajando, asignar es sumar otro (RN-12).
+  const textoAsignar = reporte.estado === 'aprobado' ? 'Asignar gestor' : 'Sumar otro gestor'
+  // Un gestor no puede tener dos tareas activas en el mismo reporte (RN-11).
+  const gestoresConTareaActiva = (tareas ?? [])
+    .filter((t) => ESTADOS_TAREA_ACTIVA.includes(t.estado) && t.gestor)
+    .map((t) => t.gestor.id)
+  // Al pasar de aprobado a asignado el backend también avisa al ciudadano (RN-16, sección 9).
+  const avisoAsignacion = (gestor) => {
+    const nombre = `${gestor.nombre} ${gestor.apellido}`
+    return reporte.estado === 'aprobado'
+      ? `Tarea asignada a ${nombre}. Se le avisó a ${nombre} y al ciudadano.`
+      : `Tarea asignada a ${nombre}. Se le avisó a ${nombre}.`
+  }
 
   return (
     <div className="panel-acciones">
       <h2 className="panel-acciones__titulo">Acciones</h2>
 
       <div className="panel-acciones__grupo">
+        {puede('asignar') && (
+          <button
+            type="button"
+            className="boton-principal"
+            onClick={() => setAbierto('asignar')}
+            disabled={tareas === null}
+          >
+            <UserPlus size={18} aria-hidden="true" />
+            {textoAsignar}
+          </button>
+        )}
         {puede('aprobar') && (
           <button type="button" className="boton-principal" onClick={() => setAbierto('aprobar')}>
             <Check size={18} aria-hidden="true" />
@@ -82,10 +109,6 @@ export default function PanelAcciones({ reporte, desde, alCambiar }) {
         )}
       </div>
 
-      {ESTADOS_CON_ASIGNACION.includes(reporte.estado) && (
-        <p className="texto-suave panel-acciones__nota">Asignar gestores llega en el próximo paso.</p>
-      )}
-
       {reporte.estado === 'rechazado' && reporte.ciudadano && (
         <Link
           className="panel-acciones__enlace"
@@ -102,6 +125,18 @@ export default function PanelAcciones({ reporte, desde, alCambiar }) {
           Eliminar
         </button>
       </div>
+
+      {abierto === 'asignar' && (
+        <DialogoElegirGestor
+          titulo={textoAsignar}
+          textoBoton="Asignar"
+          textoEnviando="Asignando…"
+          excluir={gestoresConTareaActiva}
+          accion={(gestor) => asignarTarea(reporte.id, gestor.id)}
+          alCerrar={cerrar}
+          alTerminar={(gestor) => terminar(avisoAsignacion(gestor))()}
+        />
+      )}
 
       {abierto === 'aprobar' && (
         <DialogoConfirmar

@@ -54,7 +54,13 @@ function DetalleReporte({ reporte, tareas, desde, alCambiar }) {
       </header>
 
       <aside className="detalle__acciones" aria-label="Acciones del reporte">
-        <PanelAcciones reporte={reporte} desde={desde} alCambiar={alCambiar} />
+        <PanelAcciones
+          reporte={reporte}
+          // Mientras llegan las tareas no se sabe a quién excluir al asignar
+          tareas={tareas.cargando && !tareas.datos ? null : (tareas.datos ?? [])}
+          desde={desde}
+          alCambiar={alCambiar}
+        />
       </aside>
 
       <div className="detalle__principal">
@@ -120,9 +126,11 @@ function DetalleReporte({ reporte, tareas, desde, alCambiar }) {
         <Seccion id="titulo-tareas" titulo="Historial de tareas">
           <HistorialTareas
             tareas={tareas.datos}
-            cargando={tareas.cargando}
+            cargando={tareas.cargando && !tareas.datos}
             error={tareas.error}
             reintentar={tareas.reintentar}
+            reporte={reporte}
+            alCambiar={alCambiar}
           />
         </Seccion>
       </div>

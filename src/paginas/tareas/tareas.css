@@ -1,0 +1,119 @@
+/* Diálogo "Elegir gestor" */
+.lista-gestores {
+  display: grid;
+  gap: var(--espacio-2);
+  max-height: 320px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  border: 0;
+}
+
+.opcion-gestor {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--espacio-3);
+  padding: var(--espacio-3) var(--espacio-4);
+  border: 1px solid var(--borde);
+  border-radius: 14px;
+  cursor: pointer;
+}
+
+.opcion-gestor:hover {
+  border-color: var(--verde-musgo);
+}
+
+.opcion-gestor:has(input:checked) {
+  border-color: var(--verde-bosque);
+  background: color-mix(in srgb, var(--verde-bosque) 6%, var(--superficie));
+  box-shadow: inset 0 0 0 1px var(--verde-bosque);
+}
+
+.opcion-gestor:has(input:focus-visible) {
+  outline: 3px solid var(--foco);
+  outline-offset: 2px;
+}
+
+.opcion-gestor input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--verde-bosque);
+}
+
+.opcion-gestor input:focus-visible {
+  outline: none;
+}
+
+.opcion-gestor__nombre {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.opcion-gestor__carga {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--espacio-1);
+}
+
+.carga-gestor {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 1px 10px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-boton);
+  background: var(--fondo);
+  color: var(--tinta);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* Atrasada: el ámbar va en el borde, el fondo y el punto; el texto en tinta mantiene el contraste */
+.carga-gestor--atrasada {
+  border-color: var(--ambar);
+  background: color-mix(in srgb, var(--ambar) 14%, var(--superficie));
+  font-weight: 600;
+}
+
+.carga-gestor__punto {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ambar);
+}
+
+.lista-gestores__siluetas {
+  display: grid;
+  gap: var(--espacio-3);
+}
+
+.lista-gestores__vacia,
+.lista-gestores__error {
+  display: grid;
+  justify-items: start;
+  gap: var(--espacio-3);
+  font-weight: 500;
+}
+
+/* Acciones de una tarea activa en el historial */
+.tarea__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espacio-2);
+}
+
+.tarea__acciones .boton-secundario {
+  min-height: 36px;
+  padding: var(--espacio-1) var(--espacio-4);
+  font-size: 0.9375rem;
+}
+
+/* Página /tareas */
+.filtros-tareas__gestor {
+  flex: 0 1 360px;
+  min-width: 0;
+}

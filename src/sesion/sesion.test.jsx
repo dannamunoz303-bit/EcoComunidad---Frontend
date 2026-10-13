@@ -142,11 +142,11 @@ describe('sesión', () => {
   it('con tokens, comprueba /auth/yo/ mostrando el logo y luego abre la sección', async () => {
     guardarSesion({ access: 'acc-1', refresh: 'ref-1' })
     const adaptador = simularApi(loginCorrecto())
-    montar('/tareas')
+    montar('/novedades')
 
     expect(screen.getByRole('status')).toBeInTheDocument()
     expect(screen.queryByLabelText('Correo')).not.toBeInTheDocument()
-    expect(await tituloSeccion('Tareas')).toBeInTheDocument()
+    expect(await tituloSeccion('Novedades')).toBeInTheDocument()
     expect(screen.getByText('Esta sección llega pronto.')).toBeInTheDocument()
     expect(adaptador.mock.calls.some(([c]) => c.url === '/auth/yo/')).toBe(true)
   })
