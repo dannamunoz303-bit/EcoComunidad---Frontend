@@ -99,8 +99,16 @@ describe('Resumen: datos', () => {
     expect(barraHoy).toHaveAccessibleName(`${nombreDelDia(hoy)} (hoy): 4 reportes`)
     expect(barras.filter((b) => b.classList.contains('barra--hoy'))).toHaveLength(1)
 
-    // Días en 0: cápsula vacía con rayas
-    expect(barras.filter((b) => b.classList.contains('barra--vacia'))).toHaveLength(2)
+    // Días en 0: cápsula vacía de altura completa, con rayas
+    const vacias = barras.filter((b) => b.classList.contains('barra--vacia'))
+    expect(vacias).toHaveLength(2)
+    const altoMasAlta = barras[2].querySelector('.barra__capsula').getAttribute('height') // 5 = máximo
+    vacias.forEach((barra) => {
+      const capsula = barra.querySelector('.barra__capsula')
+      expect(capsula).toHaveAttribute('height', altoMasAlta)
+      expect(capsula.style.fill).toMatch(/^url\("?#rayas-/)
+    })
+    expect(Number(altoMasAlta)).toBe(200)
     // Letra corta de cada día
     datos.reportes_por_dia.forEach(({ fecha }, i) => {
       expect(barras[i]).toHaveTextContent(letraDelDia(fecha))

@@ -1,6 +1,17 @@
 .resumen {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--espacio-5);
+  min-width: 0;
+}
+
+/* Ningún hijo de las rejillas puede ensanchar la página */
+.resumen > *,
+.resumen__rejilla > *,
+.tarjetas-resumen > *,
+.bloque > *,
+.resumen__cabecera > * {
+  min-width: 0;
 }
 
 .resumen__cabecera {
@@ -9,6 +20,10 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--espacio-3);
+}
+
+.resumen__cabecera .boton-secundario {
+  flex: none;
 }
 
 .resumen__fecha {
@@ -49,6 +64,7 @@
 
 /* Tarjetas de cifras */
 .tarjeta-cifra {
+  container-type: inline-size;
   display: grid;
   align-content: start;
   gap: var(--espacio-2);
@@ -68,6 +84,8 @@
 }
 
 .tarjeta-cifra__titulo {
+  min-width: 0;
+  overflow-wrap: anywhere;
   color: var(--tinta-suave);
   font-weight: 600;
 }
@@ -86,10 +104,12 @@
 .tarjeta-cifra__valor {
   font-family: var(--fuente-titulos);
   font-weight: 700;
-  font-size: 2.5rem;
+  /* Se achica si la cifra es muy larga para el ancho de la tarjeta */
+  font-size: min(2.5rem, 20cqi);
   line-height: 1;
   color: var(--tinta);
   font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
 }
 
 .tarjeta-cifra__subtitulo {
@@ -113,7 +133,7 @@
 }
 
 .tarjeta-cifra--destacada .tarjeta-cifra__valor {
-  font-size: 3.25rem;
+  font-size: min(3.25rem, 24cqi);
   color: var(--superficie);
 }
 
@@ -142,7 +162,7 @@
 .bloque--atencion,
 .silueta--semana,
 .silueta--atencion {
-  min-height: 340px;
+  min-height: 352px;
 }
 
 .bloque--lista,
@@ -159,10 +179,14 @@
 }
 
 /* Gráfica de la semana */
-.grafica-semana {
+.grafica-semana__contenedor {
   width: 100%;
-  height: auto;
-  max-height: 300px;
+  min-width: 0;
+}
+
+/* Alto fijo en píxeles (barras de 200 px como máximo); ancho medido del contenedor */
+.grafica-semana {
+  max-width: 100%;
   overflow: visible;
 }
 
@@ -208,7 +232,7 @@
 
 .barra__raya {
   stroke: var(--borde);
-  stroke-width: 2;
+  stroke-width: 1;
 }
 
 .barra__etiqueta {
@@ -330,11 +354,14 @@
 
 .lista-pendientes__titulo {
   grid-column: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
   font-weight: 600;
 }
 
 .lista-pendientes__datos {
   grid-column: 1;
+  min-width: 0;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -350,6 +377,8 @@
 
 .etiqueta {
   display: inline-flex;
+  max-width: 100%;
+  overflow-wrap: anywhere;
   align-items: center;
   padding: 2px 10px;
   border-radius: var(--radio-boton);
@@ -401,6 +430,8 @@
 
 .fila-atencion__texto {
   display: grid;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .fila-atencion__titulo {
@@ -414,9 +445,12 @@
 
 /* Número grande (≥ 24 px en negrita): el ámbar cumple contraste de texto grande */
 .fila-atencion__valor {
+  max-width: 7ch;
+  overflow-wrap: anywhere;
+  text-align: right;
   font-family: var(--fuente-titulos);
   font-weight: 700;
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   line-height: 1;
   color: var(--tinta);
   font-variant-numeric: tabular-nums;

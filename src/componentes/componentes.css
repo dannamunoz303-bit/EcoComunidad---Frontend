@@ -104,6 +104,8 @@
 }
 
 .panel__contenido {
+  width: calc(100% - var(--ancho-barra));
+  min-width: 0;
   margin-left: var(--ancho-barra);
   min-height: 100vh;
   display: flex;
@@ -133,20 +135,32 @@
   color: var(--verde-bosque);
 }
 
+/* El título no se encoge; el que cede espacio es el nombre del usuario */
 .barra-superior__titulo {
-  flex: 1;
-  min-width: 0;
+  flex: 1 0 auto;
   font-size: 1.5rem;
 }
 
 .barra-superior__usuario {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   color: var(--tinta-suave);
   font-weight: 500;
 }
 
+.barra-superior .boton-secundario,
+.barra-superior__menu {
+  flex: none;
+}
+
 .panel__principal {
   flex: 1;
+  min-width: 0;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   align-content: start;
   gap: var(--espacio-5);
   padding: var(--espacio-6);
@@ -180,6 +194,7 @@
   }
 
   .panel__contenido {
+    width: 100%;
     margin-left: 0;
   }
 
@@ -219,6 +234,8 @@
 }
 
 .bienvenida__texto {
+  min-width: 0;
+  overflow-wrap: anywhere;
   font-family: var(--fuente-titulos);
   font-weight: 500;
   font-size: 1.375rem;
