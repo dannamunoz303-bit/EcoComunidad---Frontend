@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import cliente, { esSinConexion, EVENTO_SESION_CERRADA } from '../api/cliente.js'
+import cliente, { esSinConexion, EVENTO_CONTRASENA_PENDIENTE, EVENTO_SESION_CERRADA } from '../api/cliente.js'
 import {
   bienvenidaPendiente,
   borrarSesion,
@@ -81,6 +81,16 @@ export default function ProveedorSesion({ children }) {
     return () => window.removeEventListener(EVENTO_SESION_CERRADA, alCerrarSesion)
   }, [limpiar])
 
+  // El backend respondió 403 "debe_cambiar_contrasena": la sesión sigue, pero solo se
+  // puede cambiar la contraseña (RN-05). Las rutas protegidas llevan a /cambiar-contrasena.
+  useEffect(() => {
+    function alPedirCambio() {
+      setUsuario((actual) => (actual ? { ...actual, debe_cambiar_contrasena: true } : actual))
+    }
+    window.addEventListener(EVENTO_CONTRASENA_PENDIENTE, alPedirCambio)
+    return () => window.removeEventListener(EVENTO_CONTRASENA_PENDIENTE, alPedirCambio)
+  }, [])
+
   // Lanza el error de axios si falla; la pantalla de login lo traduce.
   const iniciarSesion = useCallback(
     async (correo, password) => {
@@ -108,6 +118,12 @@ export default function ProveedorSesion({ children }) {
 
   const cerrarSesion = useCallback(() => limpiar(null), [limpiar])
 
+  // Tras cambiar la contraseña: tokens nuevos y ya no hay cambio pendiente.
+  const contrasenaCambiada = useCallback((tokens) => {
+    guardarSesion(tokens)
+    setUsuario((actual) => (actual ? { ...actual, debe_cambiar_contrasena: false } : actual))
+  }, [])
+
   // La bienvenida cuenta como vista en cuanto aparece.
   const marcarBienvenidaComoVista = useCallback(() => {
     marcarBienvenidaVista()
@@ -125,6 +141,7 @@ export default function ProveedorSesion({ children }) {
       cerrarSesion,
       reintentar,
       marcarBienvenidaComoVista,
+      contrasenaCambiada,
     }),
     [
       usuario,
@@ -136,6 +153,7 @@ export default function ProveedorSesion({ children }) {
       cerrarSesion,
       reintentar,
       marcarBienvenidaComoVista,
+      contrasenaCambiada,
     ],
   )
 

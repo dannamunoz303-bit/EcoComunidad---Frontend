@@ -56,6 +56,7 @@ Flujo base: el ciudadano reporta → el administrador revisa y asigna a uno o m�
 | rol\_id | INT | FK → rol |
 | estado | ENUM | activo (defecto), inactivo, bloqueado |
 | bloqueado\_hasta | DATETIME | NULL. Con estado bloqueado: fin del bloqueo. Estado bloqueado con NULL = bloqueo permanente |
+| debe\_cambiar\_contrasena | BOOLEAN | Defecto FALSE. TRUE cuando un administrador crea el usuario o le restablece la contraseña; mientras sea TRUE solo puede cambiarla (RN-05) |
 | fecha\_registro | DATETIME | Defecto: ahora |
 
 ### 4.3 categoria
@@ -219,7 +220,7 @@ activo, inactivo (gestor o ciudadano dado de baja; no puede iniciar sesión) y b
 - **RN-02.** La cédula es única y obligatoria para ciudadano y gestor. Nunca se muestra a otros usuarios; solo el administrador la ve.
 - **RN-03.** La contraseña se guarda siempre con hash y se valida con los 4 validadores de Django: mínimo 8 caracteres, no común, no solo números y no parecida a los datos del usuario (correo, nombre, apellido).
 - **RN-04. Login:** si estado = inactivo, negar. Si estado = bloqueado y bloqueado\_hasta es NULL, negar (permanente). Si estado = bloqueado y bloqueado\_hasta ya pasó, poner estado = activo y bloqueado\_hasta = NULL, y dejar entrar. Si todavía no pasó, negar y mostrar la fecha.
-- **RN-05. Inactivar usuarios (gestor o ciudadano).** Si es un gestor, sus tareas asignada o en\_proceso pasan a cancelada, se recalcula el estado de cada reporte afectado (RN-16) y se notifica al administrador para reasignar. Sus tareas terminadas quedan como historial. Si es un ciudadano (solo lo inactiva el administrador), no puede iniciar sesión pero sus reportes siguen su curso y quedan en el historial; su cédula sigue reservada porque la fila no se borra. Mientras esté inactivo, las sanciones que reciba se registran pero no cambian su estado (RN-21). Al reactivarlo se calcula su estado: vuelve a activo, o a bloqueado si todavía tiene un bloqueo vigente (RN-21). No se pueden inactivar administradores. El rol de un usuario no se cambia. El administrador no cambia contraseñas de otros usuarios. Inactivar a alguien que ya está inactivo, o reactivar a alguien que no lo está, responde error.
+- **RN-05. Inactivar usuarios (gestor o ciudadano).** Si es un gestor, sus tareas asignada o en\_proceso pasan a cancelada, se recalcula el estado de cada reporte afectado (RN-16) y se notifica al administrador para reasignar. Sus tareas terminadas quedan como historial. Si es un ciudadano (solo lo inactiva el administrador), no puede iniciar sesión pero sus reportes siguen su curso y quedan en el historial; su cédula sigue reservada porque la fila no se borra. Mientras esté inactivo, las sanciones que reciba se registran pero no cambian su estado (RN-21). Al reactivarlo se calcula su estado: vuelve a activo, o a bloqueado si todavía tiene un bloqueo vigente (RN-21). No se pueden inactivar administradores. El rol de un usuario no se cambia. El administrador no elige ni conoce contraseñas definitivas de otros usuarios. Cada usuario puede cambiar su propia contraseña escribiendo la actual. El administrador puede restablecer la contraseña de otro usuario: el sistema genera una temporal que se muestra una sola vez y el usuario debe cambiarla al iniciar sesión; lo mismo aplica a los usuarios que crea el administrador. Mientras tenga que cambiarla, solo puede consultar sus datos y cambiar la contraseña. Inactivar a alguien que ya está inactivo, o reactivar a alguien que no lo está, responde error.
 
 ### Reportes
 
@@ -271,6 +272,7 @@ activo, inactivo (gestor o ciudadano dado de baja; no puede iniciar sesión) y b
 | Ver notificaciones | notificacion | Sección 9 |
 | Crear novedad (queja) | novedad | RN-18 |
 | Recibir y ver sanciones | sancion | RN-19 a RN-21 |
+| Cambiar su propia contraseña | usuario | RN-03, RN-05 |
 
 ### Gestor ambiental
 
@@ -284,6 +286,7 @@ activo, inactivo (gestor o ciudadano dado de baja; no puede iniciar sesión) y b
 | Ver todos los reportes | reporte | RN-10 |
 | Crear novedad (ayuda, incidente) | novedad | RN-18 |
 | Ver notificaciones | notificacion | Sección 9 |
+| Cambiar su propia contraseña | usuario | RN-03, RN-05 |
 
 ### Administrador
 
@@ -302,6 +305,8 @@ activo, inactivo (gestor o ciudadano dado de baja; no puede iniciar sesión) y b
 | Ver notificaciones | notificacion | Sección 9 |
 | Levantar un bloqueo antes de tiempo | sancion, usuario | RN-21 |
 | Ver resumen del dashboard | reporte, novedad, tarea, usuario | Sección 11 |
+| Cambiar su propia contraseña | usuario | RN-03, RN-05 |
+| Restablecer la contraseña de otro usuario | usuario | RN-05 |
 
 ## 9. Notificaciones
 
@@ -324,6 +329,7 @@ Cada usuario ve solo sus notificaciones (también el administrador). Puede marca
 | Reporte aprobado | reporte\_aprobado | Ciudadano |
 | Reporte eliminado por el administrador | reporte\_eliminado | Ciudadano |
 | Tarea sin acciones (sección 11) | tarea\_sin\_acciones | Administradores |
+| Contraseña restablecida | contrasena\_restablecida | El usuario |
 
 ## 10. Flujos completos
 
@@ -389,6 +395,7 @@ CREATE TABLE usuario (
   rol_id INT NOT NULL,
   estado ENUM('activo','inactivo','bloqueado') NOT NULL DEFAULT 'activo',
   bloqueado_hasta DATETIME NULL,
+  debe_cambiar_contrasena BOOLEAN NOT NULL DEFAULT FALSE,
   fecha_registro DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (rol_id) REFERENCES rol(id)
 );
@@ -617,6 +624,7 @@ DATABASES = {
 
 - La autenticación usa JWT de vida corta: access de 30 minutos y refresh de 1 día.
 - En cada petición el backend revisa el estado del usuario en la base de datos: si es inactivo o tiene un bloqueo vigente, responde 403 aunque el token siga válido. El refresh también lo revisa. Se aplica la misma lógica de RN-04 (un bloqueo vencido se levanta).
+- Cuando se niega por el estado del usuario (en el login, el refresh o cualquier petición), la respuesta 403 es {"detail": mensaje, "code": código, "bloqueado\_hasta": fecha ISO en hora de Colombia o null}. Códigos: usuario\_inactivo (estado inactivo, bloqueado\_hasta null), usuario\_bloqueado (bloqueo temporal vigente, bloqueado\_hasta con la fecha de fin) y usuario\_bloqueado\_permanente (bloqueo permanente, bloqueado\_hasta null). El panel web usa code, no el texto de detail.
 
 ### Ajustes por usar Django
 
@@ -647,3 +655,11 @@ GET /api/dashboard/resumen/, solo para el administrador. Todo se calcula con con
 - tareas\_atrasadas: tareas activas con 1 día o más sin acciones, con la misma regla de la alerta (sección 11).
 - gestores\_activos: usuarios con rol gestor y estado activo.
 - ultimos\_pendientes: los 5 reportes pendientes más recientes, no eliminados, con id, titulo, categoria (id y nombre) y fecha\_creacion.
+
+### Datos de prueba
+
+Dos comandos para ver el panel con números en desarrollo o en una demostración:
+
+- python manage.py cargar\_datos\_prueba --confirmar: pide una contraseña para todos los usuarios de prueba y crea 3 ciudadanos y 3 gestores con correos @prueba.ecocomunidad.co, las 5 categorías si faltan, unos 15 reportes en todos los estados (con fotos), tareas, acciones, evidencias, novedades y una sanción. Usa los mismos servicios de la app, así que se cumplen las reglas (por ejemplo RN-13 y RN-16); solo se ajustan fechas para repartir los reportes en los últimos 7 días y dejar una tarea atrasada. Usa el primer administrador activo y se niega si ya hay datos de prueba. Sin --confirmar no hace nada.
+- python manage.py borrar\_datos\_prueba --confirmar: borra todo lo ligado a los usuarios @prueba.ecocomunidad.co (notificaciones, fotos y sus archivos, acciones, novedades, sanciones, tareas, reportes y los usuarios). No toca categorías ni otros usuarios. Sin --confirmar solo muestra cuánto borraría.
+- Es la única excepción a la eliminación lógica (sección 2), y solo para datos de prueba.

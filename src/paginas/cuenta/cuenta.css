@@ -1,0 +1,63 @@
+.formulario-contrasena {
+  display: grid;
+  gap: var(--espacio-4);
+  max-width: 480px;
+}
+
+.formulario-contrasena__enviar {
+  justify-self: start;
+}
+
+/* Mi cuenta */
+.mi-cuenta {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--espacio-5);
+  max-width: 760px;
+}
+
+.mi-cuenta > * {
+  min-width: 0;
+}
+
+/* /cambiar-contrasena: pantalla centrada, fuera del diseño del panel */
+.cambio-obligatorio {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: var(--espacio-6) var(--espacio-4);
+}
+
+.cambio-obligatorio__caja {
+  display: grid;
+  gap: var(--espacio-5);
+  width: 100%;
+  max-width: 480px;
+  padding: var(--espacio-6) var(--espacio-5);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-tarjeta);
+  background: var(--superficie);
+  box-shadow: var(--sombra-2);
+}
+
+.cambio-obligatorio__logo {
+  justify-self: center;
+}
+
+.cambio-obligatorio__titulo {
+  font-size: 1.5rem;
+  text-align: center;
+}
+
+.cambio-obligatorio__texto {
+  color: var(--tinta);
+  text-align: center;
+}
+
+.cambio-obligatorio .formulario-contrasena__enviar {
+  justify-self: stretch;
+}
+
+.cambio-obligatorio__salir {
+  justify-self: center;
+}

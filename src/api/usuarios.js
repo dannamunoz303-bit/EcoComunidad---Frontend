@@ -40,3 +40,10 @@ export async function reactivarUsuario(id) {
   const { data } = await cliente.post(`/usuarios/${id}/reactivar/`)
   return data
 }
+
+// RN-05: genera una contraseña temporal que se muestra una sola vez ({ contrasena_temporal }).
+// El usuario deberá cambiarla al iniciar sesión. No vale para uno mismo.
+export async function restablecerContrasena(id) {
+  const { data } = await cliente.post(`/usuarios/${id}/restablecer-contrasena/`)
+  return data
+}

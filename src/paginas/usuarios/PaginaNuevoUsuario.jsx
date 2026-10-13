@@ -57,6 +57,7 @@ function DialogoCreado({ usuario, password, alCerrar }) {
           <dd className="datos-creados__contrasena">{password}</dd>
         </div>
       </dl>
+      <p>Deberá cambiar esta contraseña la primera vez que inicie sesión.</p>
       <p>
         Entrégale estos datos a {nombre} de forma segura. La contraseña no se volverá a mostrar.
       </p>

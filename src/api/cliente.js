@@ -2,6 +2,9 @@ import axios from 'axios'
 import { borrarSesion, guardarSesion, haySesion, leerAccess, leerRefresh } from './sesion.js'
 
 export const EVENTO_SESION_CERRADA = 'sesion-cerrada'
+// 403 porque el usuario debe cambiar su contraseña (RN-05): la sesión sigue abierta.
+export const EVENTO_CONTRASENA_PENDIENTE = 'contrasena-pendiente'
+export const CODIGO_CONTRASENA_PENDIENTE = 'debe_cambiar_contrasena'
 
 // Códigos del 403 por estado del usuario (ecocomunidad.md, sección 14).
 export const CODIGOS_ESTADO_DENEGADO = ['usuario_inactivo', 'usuario_bloqueado', 'usuario_bloqueado_permanente']
@@ -92,6 +95,12 @@ cliente.interceptors.response.use(
 
     if (response.status === 403 && esEstadoDenegado(response.data)) {
       cerrarSesion(response.data)
+      throw error
+    }
+
+    // No cierra la sesión: la app lleva a cambiar la contraseña.
+    if (response.status === 403 && response.data?.code === CODIGO_CONTRASENA_PENDIENTE) {
+      window.dispatchEvent(new CustomEvent(EVENTO_CONTRASENA_PENDIENTE))
       throw error
     }
 

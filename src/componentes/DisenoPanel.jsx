@@ -1,9 +1,9 @@
-import { LogOut, Menu, X } from 'lucide-react'
+import { CircleUserRound, LogOut, Menu, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import Logo from '../marca/Logo.jsx'
 import { useSesion } from '../sesion/useSesion.js'
-import { SECCIONES, seccionDeRuta } from './secciones.js'
+import { SECCIONES, tituloDeRuta } from './secciones.js'
 import './componentes.css'
 
 // Diseño de las rutas protegidas: barra lateral, barra superior y contenido.
@@ -11,7 +11,7 @@ export default function DisenoPanel() {
   const { usuario, cerrarSesion } = useSesion()
   const { pathname } = useLocation()
   const [menuAbierto, setMenuAbierto] = useState(false)
-  const seccion = seccionDeRuta(pathname)
+  const titulo = tituloDeRuta(pathname)
 
   useEffect(() => {
     if (!menuAbierto) return undefined
@@ -64,10 +64,18 @@ export default function DisenoPanel() {
           >
             <Menu size={22} aria-hidden="true" />
           </button>
-          <h1 className="barra-superior__titulo">{seccion?.titulo}</h1>
-          <span className="barra-superior__usuario">
-            {usuario.nombre} {usuario.apellido}
-          </span>
+          <h1 className="barra-superior__titulo">{titulo}</h1>
+          <Link
+            className="barra-superior__cuenta"
+            to="/mi-cuenta"
+            aria-label={`Mi cuenta (${usuario.nombre} ${usuario.apellido})`}
+            aria-current={pathname === '/mi-cuenta' ? 'page' : undefined}
+          >
+            <CircleUserRound size={20} aria-hidden="true" />
+            <span className="barra-superior__usuario">
+              {usuario.nombre} {usuario.apellido}
+            </span>
+          </Link>
           <button type="button" className="boton-secundario" onClick={cerrarSesion}>
             <LogOut size={18} aria-hidden="true" />
             Cerrar sesión

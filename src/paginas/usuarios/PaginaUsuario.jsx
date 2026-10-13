@@ -1,15 +1,18 @@
-import { ArrowLeft, ClipboardList, ListChecks, Lock, Pencil, RefreshCw, UserCheck, UserX } from 'lucide-react'
+import { ArrowLeft, ClipboardList, Copy, KeyRound, ListChecks, Lock, Pencil, RefreshCw, UserCheck, UserX } from 'lucide-react'
 import { useCallback, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { obtenerSeguimientoGestor } from '../../api/seguimiento.js'
-import { inactivarUsuario, obtenerUsuario, reactivarUsuario } from '../../api/usuarios.js'
+import { inactivarUsuario, obtenerUsuario, reactivarUsuario, restablecerContrasena } from '../../api/usuarios.js'
+import Dialogo from '../../componentes/Dialogo.jsx'
 import EstadoUsuario from '../../componentes/EstadoUsuario.jsx'
 import { useAvisos } from '../../componentes/avisos/useAvisos.js'
 import Brotico from '../../marca/Brotico.jsx'
+import { useSesion } from '../../sesion/useSesion.js'
 import { formatearFechaHoraCorta, formatearFechaHora } from '../../utilidades/fechas.js'
 import { useCarga } from '../../utilidades/useCarga.js'
 import { NOMBRES_ROL, nombreCompleto } from '../../utilidades/usuarios.js'
 import DialogoConfirmar from '../reportes/acciones/DialogoConfirmar.jsx'
+import { copiarTexto } from './portapapeles.js'
 import '../reportes/detalle.css'
 import './usuarios.css'
 
@@ -31,7 +34,41 @@ function TareasActivasDelGestor({ id }) {
   )
 }
 
+// La contraseña temporal se ve una sola vez: al cerrar este diálogo se descarta.
+function DialogoContrasenaTemporal({ nombre, contrasena, alCerrar }) {
+  const { mostrarAviso } = useAvisos()
+
+  async function copiar() {
+    const ok = await copiarTexto(contrasena)
+    mostrarAviso(ok ? { tipo: 'exito', texto: 'Contraseña copiada.' } : { tipo: 'error', texto: 'No pudimos copiar la contraseña.' })
+  }
+
+  return (
+    <Dialogo
+      titulo="Contraseña temporal"
+      alCerrar={alCerrar}
+      pie={
+        <>
+          <button type="button" className="boton-secundario" onClick={copiar}>
+            <Copy size={18} aria-hidden="true" />
+            Copiar
+          </button>
+          <button type="button" className="boton-principal" onClick={alCerrar} data-autofoco>
+            Listo
+          </button>
+        </>
+      }
+    >
+      <p className="contrasena-temporal">{contrasena}</p>
+      <p>Entrégasela a {nombre} de forma segura. No se volverá a mostrar.</p>
+    </Dialogo>
+  )
+}
+
 function DetalleUsuario({ usuario, alCambiar }) {
+  const { usuario: yo } = useSesion()
+  const [temporal, setTemporal] = useState(null)
+  const esUnoMismo = yo?.id === usuario.id
   const { mostrarAviso } = useAvisos()
   const [abierto, setAbierto] = useState(null)
   const nombre = nombreCompleto(usuario)
@@ -138,6 +175,47 @@ function DetalleUsuario({ usuario, alCambiar }) {
           <p className="texto-suave">Los administradores no se pueden inactivar.</p>
         )}
       </section>
+
+      <section className="detalle__seccion" aria-labelledby="titulo-contrasena-usuario">
+        <h3 id="titulo-contrasena-usuario" className="detalle__subtitulo">
+          Contraseña
+        </h3>
+        {esUnoMismo ? (
+          <p>
+            Para cambiar tu contraseña ve a <Link to="/mi-cuenta">Mi cuenta</Link>.
+          </p>
+        ) : (
+          <div className="usuario__acciones">
+            <button type="button" className="boton-secundario" onClick={() => setAbierto('restablecer')}>
+              <KeyRound size={18} aria-hidden="true" />
+              Restablecer contraseña
+            </button>
+          </div>
+        )}
+      </section>
+
+      {abierto === 'restablecer' && (
+        <DialogoConfirmar
+          titulo="¿Restablecer la contraseña?"
+          textoBoton="Restablecer contraseña"
+          textoEnviando="Restableciendo…"
+          accion={() => restablecerContrasena(usuario.id)}
+          alCerrar={() => setAbierto(null)}
+          alTerminar={(resultado) => {
+            setAbierto(null)
+            setTemporal(resultado.contrasena_temporal)
+          }}
+        >
+          <p>
+            Se generará una contraseña temporal para {nombre}. Deberá cambiarla al iniciar sesión. La temporal se
+            mostrará una sola vez.
+          </p>
+        </DialogoConfirmar>
+      )}
+
+      {temporal && (
+        <DialogoContrasenaTemporal nombre={nombre} contrasena={temporal} alCerrar={() => setTemporal(null)} />
+      )}
 
       {abierto === 'inactivar' && (
         <DialogoConfirmar

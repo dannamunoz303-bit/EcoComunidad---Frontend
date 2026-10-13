@@ -224,6 +224,7 @@ describe('Crear usuario', () => {
     expect(dialogo).toHaveTextContent(
       'Entrégale estos datos a Sofía Vargas de forma segura. La contraseña no se volverá a mostrar.',
     )
+    expect(dialogo).toHaveTextContent('Deberá cambiar esta contraseña la primera vez que inicie sesión.')
 
     fireEvent.click(within(dialogo).getByRole('button', { name: 'Copiar datos' }))
     await waitFor(() =>

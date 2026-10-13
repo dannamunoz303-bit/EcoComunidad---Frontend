@@ -156,6 +156,30 @@
   flex: none;
 }
 
+/* Nombre del administrador: enlace a Mi cuenta */
+.barra-superior__cuenta {
+  flex: 0 1 auto;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espacio-2);
+  min-height: 44px;
+  padding: var(--espacio-1) var(--espacio-3);
+  border-radius: var(--radio-boton);
+  color: var(--tinta-suave);
+  text-decoration: none;
+}
+
+.barra-superior__cuenta svg {
+  flex: none;
+}
+
+.barra-superior__cuenta:hover,
+.barra-superior__cuenta[aria-current='page'] {
+  background: var(--superficie);
+  color: var(--verde-bosque);
+}
+
 .panel__principal {
   flex: 1;
   min-width: 0;

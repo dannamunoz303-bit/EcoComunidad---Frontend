@@ -23,6 +23,14 @@ export const SECCIONES = [
   { ruta: '/notificaciones', titulo: 'Notificaciones', icono: Bell },
 ]
 
+// Páginas del panel que no están en la barra lateral.
+const OTRAS_PAGINAS = [{ ruta: '/mi-cuenta', titulo: 'Mi cuenta' }]
+
+// Título de la barra superior para una ruta.
+export function tituloDeRuta(ruta) {
+  return seccionDeRuta(ruta)?.titulo ?? OTRAS_PAGINAS.find((p) => p.ruta === ruta)?.titulo ?? ''
+}
+
 // "/reportes/12" pertenece a Reportes.
 export function seccionDeRuta(ruta) {
   return (

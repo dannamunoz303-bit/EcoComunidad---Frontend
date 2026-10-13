@@ -282,3 +282,13 @@ a {
 .campo__con-icono input {
   padding-left: 44px;
 }
+
+/* Reglas de la contraseña (RN-03) */
+.reglas-contrasena {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding-left: var(--espacio-5);
+  color: var(--tinta-suave);
+  font-size: 0.875rem;
+}
