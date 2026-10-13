@@ -9,6 +9,7 @@ import { useCarga } from '../../utilidades/useCarga.js'
 import GaleriaFotos from './GaleriaFotos.jsx'
 import HistorialTareas from './HistorialTareas.jsx'
 import UbicacionReporte from './UbicacionReporte.jsx'
+import NovedadesDelReporte from '../novedades/NovedadesDelReporte.jsx'
 import PanelAcciones from './acciones/PanelAcciones.jsx'
 import './detalle.css'
 
@@ -132,6 +133,10 @@ function DetalleReporte({ reporte, tareas, desde, alCambiar }) {
             reporte={reporte}
             alCambiar={alCambiar}
           />
+        </Seccion>
+
+        <Seccion id="titulo-novedades" titulo="Novedades de este reporte">
+          <NovedadesDelReporte reporteId={reporte.id} />
         </Seccion>
       </div>
     </div>

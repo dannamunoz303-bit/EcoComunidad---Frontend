@@ -105,6 +105,32 @@
   background: var(--fondo);
 }
 
+/* Novedades: tipo (con ícono) y estado */
+.tipo-novedad--ayuda {
+  --color-estado: var(--verde-hoja);
+}
+
+.tipo-novedad--queja {
+  --color-estado: var(--arcilla);
+}
+
+.tipo-novedad--incidente {
+  --color-estado: var(--ambar);
+}
+
+.tipo-novedad__icono {
+  flex: none;
+  color: var(--color-estado);
+}
+
+.estado-novedad--abierta {
+  --color-estado: var(--ambar);
+}
+
+.estado-novedad--atendida {
+  --color-estado: var(--verde-bosque);
+}
+
 /* En proceso: el punto late para indicar actividad */
 .estado-reporte--en_proceso .estado-reporte__punto,
 .estado-tarea--en_proceso .estado-reporte__punto {

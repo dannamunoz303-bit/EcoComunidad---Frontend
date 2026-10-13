@@ -3,6 +3,7 @@ import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { listarUsuarios } from '../../api/usuarios.js'
 import EstadoUsuario from '../../componentes/EstadoUsuario.jsx'
+import Pestanas from '../../componentes/Pestanas.jsx'
 import Brotico from '../../marca/Brotico.jsx'
 import { formatearFechaCorta } from '../../utilidades/fechas.js'
 import { useCarga } from '../../utilidades/useCarga.js'
@@ -44,45 +45,6 @@ function SiluetasFilas() {
           <span className="silueta-fila__bloque" />
           <span className="silueta-fila__bloque" />
         </div>
-      ))}
-    </div>
-  )
-}
-
-function Pestanas({ rol, conteo, alCambiar, idPanel }) {
-  const botones = useRef([])
-
-  // Flechas, Inicio y Fin mueven entre pestañas (patrón de pestañas de WAI-ARIA).
-  function alPresionar(evento, indice) {
-    const destinos = { ArrowRight: indice + 1, ArrowLeft: indice - 1, Home: 0, End: ROLES.length - 1 }
-    if (!(evento.key in destinos)) return
-    evento.preventDefault()
-    const siguiente = (destinos[evento.key] + ROLES.length) % ROLES.length
-    alCambiar(ROLES[siguiente].valor)
-    botones.current[siguiente]?.focus()
-  }
-
-  return (
-    <div className="pestanas" role="tablist" aria-label="Rol">
-      {ROLES.map(({ valor, nombre }, i) => (
-        <button
-          key={valor}
-          ref={(boton) => {
-            botones.current[i] = boton
-          }}
-          type="button"
-          role="tab"
-          id={`pestana-${valor}`}
-          aria-selected={rol === valor}
-          aria-controls={idPanel}
-          tabIndex={rol === valor ? 0 : -1}
-          className="pestana"
-          onClick={() => alCambiar(valor)}
-          onKeyDown={(e) => alPresionar(e, i)}
-        >
-          {nombre}
-          <span className="filtro-estado__cantidad">{conteo[valor] ?? 0}</span>
-        </button>
       ))}
     </div>
   )
@@ -223,7 +185,13 @@ export default function PaginaUsuarios() {
         </Link>
       </div>
 
-      <Pestanas rol={rol} conteo={conteo} alCambiar={(valor) => cambiar({ rol: valor })} idPanel={idPanel} />
+      <Pestanas
+        opciones={ROLES.map((r) => ({ ...r, cantidad: conteo[r.valor] ?? 0 }))}
+        valor={rol}
+        alCambiar={(valor) => cambiar({ rol: valor })}
+        etiqueta="Rol"
+        idPanel={idPanel}
+      />
 
       <div id={idPanel} role="tabpanel" aria-labelledby={`pestana-${rol}`} className="usuarios__panel">
         <div className="filtros-reportes">

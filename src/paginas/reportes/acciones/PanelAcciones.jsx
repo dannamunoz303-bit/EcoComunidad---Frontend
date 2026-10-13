@@ -1,11 +1,12 @@
 import { Check, Gavel, Pencil, RotateCcw, Trash2, Undo2, UserPlus, X } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { aprobarReporte, devolverAPendiente, eliminarReporte, reabrirReporte } from '../../../api/reportes.js'
+import { aprobarReporte, devolverAPendiente, eliminarReporte } from '../../../api/reportes.js'
 import { asignarTarea } from '../../../api/tareas.js'
 import { useAvisos } from '../../../componentes/avisos/useAvisos.js'
 import DialogoElegirGestor from '../../tareas/DialogoElegirGestor.jsx'
 import DialogoConfirmar from './DialogoConfirmar.jsx'
+import DialogoReabrir, { AVISO_REABIERTO } from './DialogoReabrir.jsx'
 import DialogoRechazar from './DialogoRechazar.jsx'
 import './acciones.css'
 
@@ -173,19 +174,7 @@ export default function PanelAcciones({ reporte, tareas, desde, alCambiar }) {
       )}
 
       {abierto === 'reabrir' && (
-        <DialogoConfirmar
-          titulo="¿Reabrir este reporte?"
-          textoBoton="Reabrir"
-          textoEnviando="Reabriendo…"
-          accion={() => reabrirReporte(reporte.id)}
-          alCerrar={cerrar}
-          alTerminar={terminar('Reporte reabierto. Ya puedes asignarle una tarea nueva.')}
-        >
-          <p>
-            Solo se puede reabrir si el ciudadano presentó una queja después de que se resolvió. Las tareas
-            anteriores quedan como historial.
-          </p>
-        </DialogoConfirmar>
+        <DialogoReabrir reporteId={reporte.id} alCerrar={cerrar} alTerminar={terminar(AVISO_REABIERTO)} />
       )}
 
       {abierto === 'eliminar' && (

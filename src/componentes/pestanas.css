@@ -1,0 +1,30 @@
+/* Pestañas (por ejemplo, roles en Usuarios o estados en Novedades) */
+.pestanas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espacio-1);
+  border-bottom: 1px solid var(--borde);
+}
+
+.pestana {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espacio-2);
+  min-height: 44px;
+  margin-bottom: -1px;
+  padding: var(--espacio-2) var(--espacio-4);
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: transparent;
+  color: var(--tinta-suave);
+  font-weight: 600;
+}
+
+.pestana:hover {
+  color: var(--tinta);
+}
+
+.pestana[aria-selected='true'] {
+  border-bottom-color: var(--verde-bosque);
+  color: var(--verde-bosque);
+}
