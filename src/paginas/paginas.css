@@ -1,0 +1,147 @@
+.texto-suave {
+  color: var(--tinta-suave);
+}
+
+.pagina-centrada {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--espacio-4);
+  padding: var(--espacio-5) var(--espacio-4);
+  text-align: center;
+}
+
+.boton-principal {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espacio-2);
+  padding: var(--espacio-3) var(--espacio-5);
+  border: 0;
+  border-radius: var(--radio-boton);
+  background: var(--verde-bosque);
+  color: var(--superficie);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.boton-principal:hover {
+  background: var(--verde-musgo);
+}
+
+/* Página de revisión de marca */
+.pagina-marca {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: var(--espacio-6) var(--espacio-4) var(--espacio-8);
+  display: grid;
+  gap: var(--espacio-7);
+}
+
+.pagina-marca header {
+  display: grid;
+  gap: var(--espacio-3);
+}
+
+.pagina-marca section {
+  display: grid;
+  gap: var(--espacio-4);
+}
+
+.rejilla {
+  display: grid;
+  gap: var(--espacio-4);
+  padding: 0;
+  list-style: none;
+}
+
+.rejilla--3 {
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.rejilla--4 {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.rejilla--colores {
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+}
+
+.muestra {
+  display: grid;
+  gap: var(--espacio-4);
+  align-content: start;
+  padding: var(--espacio-5);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-tarjeta);
+  background: var(--superficie);
+  box-shadow: var(--sombra-1);
+}
+
+.muestra h3 {
+  font-size: 1.1rem;
+}
+
+.muestra--verde {
+  background: var(--verde-bosque);
+  border-color: var(--verde-bosque);
+}
+
+.muestra--verde h3 {
+  color: var(--superficie);
+}
+
+.muestra--un-color {
+  color: var(--tinta);
+}
+
+.muestra--un-color h3 {
+  color: var(--tinta);
+}
+
+.muestra__fila {
+  display: flex;
+  align-items: end;
+  gap: var(--espacio-4);
+}
+
+.muestra--animado {
+  justify-items: start;
+}
+
+.muestra--brotico {
+  justify-items: center;
+  text-align: center;
+}
+
+.muestra__texto {
+  font-weight: 500;
+}
+
+.muestra__uso {
+  font-size: 0.875rem;
+}
+
+.color {
+  display: grid;
+  gap: var(--espacio-1);
+}
+
+.color__muestra {
+  height: 64px;
+  border-radius: 14px;
+  border: 1px solid var(--borde);
+}
+
+.color__nombre {
+  font-weight: 600;
+}
+
+.color__hex {
+  font-variant-numeric: tabular-nums;
+}
+
+.color__uso {
+  font-size: 0.875rem;
+}

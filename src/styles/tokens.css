@@ -1,0 +1,45 @@
+/* Tokens de diseño. Fuente: docs/marca/marca.md */
+:root {
+  /* Colores de marca */
+  --verde-bosque: #1e5a3a; /* verde principal: botones, barra lateral, títulos */
+  --verde-hoja: #3e9b63; /* acentos, gráficas */
+  --verde-musgo: #3b7a55; /* texto suave: "Eco", etiquetas */
+  --verde-brote: #a8d9b8; /* detalles sobre verde oscuro */
+  --verde-brotico: #5bb37e; /* cuerpo de Brotico */
+  --fondo: #f3f6f1; /* fondo de la app */
+  --superficie: #ffffff; /* tarjetas */
+  --borde: #dce5df; /* bordes */
+  --tinta: #14211a; /* texto principal */
+  --tinta-suave: #4f5e55; /* texto secundario */
+  --pavimento: #3a4740; /* pavimento del logo */
+  --ambar: #b7791f; /* alerta / atrasado */
+  --arcilla: #b4432b; /* error / rechazado */
+
+  /* Tipografías */
+  --fuente-titulos: 'Bricolage Grotesque', system-ui, sans-serif;
+  --fuente-texto: 'Instrument Sans', system-ui, sans-serif;
+
+  /* Radios */
+  --radio-tarjeta: 22px;
+  --radio-boton: 999px;
+  --radio-campo: 12px;
+
+  /* Espacios */
+  --espacio-1: 4px;
+  --espacio-2: 8px;
+  --espacio-3: 12px;
+  --espacio-4: 16px;
+  --espacio-5: 24px;
+  --espacio-6: 32px;
+  --espacio-7: 48px;
+  --espacio-8: 64px;
+
+  /* Sombras suaves (teñidas con la tinta de marca) */
+  --sombra-1: 0 1px 2px rgb(20 33 26 / 0.06), 0 1px 3px rgb(20 33 26 / 0.04);
+  --sombra-2: 0 4px 12px rgb(20 33 26 / 0.07), 0 1px 3px rgb(20 33 26 / 0.05);
+  --sombra-3: 0 12px 32px rgb(20 33 26 / 0.1), 0 2px 6px rgb(20 33 26 / 0.05);
+
+  /* Foco accesible */
+  --foco: var(--verde-bosque);
+  --foco-sobre-verde: var(--verde-brote);
+}
