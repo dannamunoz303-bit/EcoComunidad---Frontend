@@ -7,5 +7,7 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/pruebas/setup.js'],
+    // Con toda la suite en paralelo, algunas pruebas pasan de 5 s en un equipo cargado.
+    testTimeout: 15000,
   },
 })

@@ -25,7 +25,7 @@ export default function NecesitaAtencion({ novedades, tareasAtrasadas, gestores 
     <ul className="lista-atencion">
       <Fila a="/novedades" icono={MessageSquareWarning} titulo="Novedades abiertas" valor={novedades} />
       <Fila
-        a="/seguimiento"
+        a="/seguimiento?atrasadas=1"
         icono={AlarmClock}
         titulo="Tareas atrasadas"
         valor={tareasAtrasadas}

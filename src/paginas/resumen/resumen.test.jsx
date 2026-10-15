@@ -159,7 +159,7 @@ describe('Resumen: datos', () => {
     await esperarDatos()
 
     const fila = screen.getByRole('link', { name: /Tareas atrasadas/ })
-    expect(fila).toHaveAttribute('href', '/seguimiento')
+    expect(fila).toHaveAttribute('href', '/seguimiento?atrasadas=1')
     expect(fila).not.toHaveClass('fila-atencion--alerta')
     expect(fila).not.toHaveTextContent('Más de 1 día sin acciones')
   })

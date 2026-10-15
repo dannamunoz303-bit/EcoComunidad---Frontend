@@ -147,7 +147,8 @@ describe('sesión', () => {
     expect(screen.getByRole('status')).toBeInTheDocument()
     expect(screen.queryByLabelText('Correo')).not.toBeInTheDocument()
     expect(await tituloSeccion('Seguimiento')).toBeInTheDocument()
-    expect(screen.getByText('Esta sección llega pronto.')).toBeInTheDocument()
+    // La sección se descarga aparte (carga diferida)
+    expect(await screen.findByRole('switch', { name: 'Solo con tareas atrasadas' })).toBeInTheDocument()
     expect(adaptador.mock.calls.some(([c]) => c.url === '/auth/yo/')).toBe(true)
   })
 

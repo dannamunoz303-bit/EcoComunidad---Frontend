@@ -2,33 +2,34 @@ import { lazy, Suspense } from 'react'
 import { Route, Routes } from 'react-router-dom'
 import ProveedorAvisos from './componentes/avisos/ProveedorAvisos.jsx'
 import DisenoPanel from './componentes/DisenoPanel.jsx'
-import { SECCIONES } from './componentes/secciones.js'
+import PaginaCambioObligatorio from './paginas/cuenta/PaginaCambioObligatorio.jsx'
 import PaginaLogin from './paginas/PaginaLogin.jsx'
 import PaginaNoEncontrada from './paginas/PaginaNoEncontrada.jsx'
-import PaginaPronto from './paginas/PaginaPronto.jsx'
-import PaginaEditarReporte from './paginas/reportes/editar/PaginaEditarReporte.jsx'
-import PaginaReporte from './paginas/reportes/PaginaReporte.jsx'
-import PaginaReportes from './paginas/reportes/PaginaReportes.jsx'
-import PaginaNovedad from './paginas/novedades/PaginaNovedad.jsx'
-import PaginaNovedades from './paginas/novedades/PaginaNovedades.jsx'
-import PaginaNuevaSancion from './paginas/sanciones/PaginaNuevaSancion.jsx'
-import PaginaSanciones from './paginas/sanciones/PaginaSanciones.jsx'
-import PaginaCategorias from './paginas/categorias/PaginaCategorias.jsx'
-import PaginaCambioObligatorio from './paginas/cuenta/PaginaCambioObligatorio.jsx'
-import PaginaMiCuenta from './paginas/cuenta/PaginaMiCuenta.jsx'
 import PaginaResumen from './paginas/PaginaResumen.jsx'
-import PaginaTareas from './paginas/tareas/PaginaTareas.jsx'
-import PaginaEditarUsuario from './paginas/usuarios/PaginaEditarUsuario.jsx'
-import PaginaNuevoUsuario from './paginas/usuarios/PaginaNuevoUsuario.jsx'
-import PaginaUsuario from './paginas/usuarios/PaginaUsuario.jsx'
-import PaginaUsuarios from './paginas/usuarios/PaginaUsuarios.jsx'
 import { RutaCambioObligatorio, RutaProtegida, RutaPublica } from './sesion/RutasSesion.jsx'
+
+// En el paquete principal van el login, el diseño general y el Resumen.
+// Cada sección se descarga al abrirla; mientras llega, DisenoPanel muestra el logo centrado.
+const PaginaReportes = lazy(() => import('./paginas/reportes/PaginaReportes.jsx'))
+const PaginaReporte = lazy(() => import('./paginas/reportes/PaginaReporte.jsx'))
+const PaginaEditarReporte = lazy(() => import('./paginas/reportes/editar/PaginaEditarReporte.jsx'))
+const PaginaTareas = lazy(() => import('./paginas/tareas/PaginaTareas.jsx'))
+const PaginaUsuarios = lazy(() => import('./paginas/usuarios/PaginaUsuarios.jsx'))
+const PaginaNuevoUsuario = lazy(() => import('./paginas/usuarios/PaginaNuevoUsuario.jsx'))
+const PaginaUsuario = lazy(() => import('./paginas/usuarios/PaginaUsuario.jsx'))
+const PaginaEditarUsuario = lazy(() => import('./paginas/usuarios/PaginaEditarUsuario.jsx'))
+const PaginaCategorias = lazy(() => import('./paginas/categorias/PaginaCategorias.jsx'))
+const PaginaNovedades = lazy(() => import('./paginas/novedades/PaginaNovedades.jsx'))
+const PaginaNovedad = lazy(() => import('./paginas/novedades/PaginaNovedad.jsx'))
+const PaginaSanciones = lazy(() => import('./paginas/sanciones/PaginaSanciones.jsx'))
+const PaginaNuevaSancion = lazy(() => import('./paginas/sanciones/PaginaNuevaSancion.jsx'))
+const PaginaSeguimiento = lazy(() => import('./paginas/seguimiento/PaginaSeguimiento.jsx'))
+const PaginaGestorSeguimiento = lazy(() => import('./paginas/seguimiento/PaginaGestorSeguimiento.jsx'))
+const PaginaNotificaciones = lazy(() => import('./paginas/notificaciones/PaginaNotificaciones.jsx'))
+const PaginaMiCuenta = lazy(() => import('./paginas/cuenta/PaginaMiCuenta.jsx'))
 
 // Solo en desarrollo: en el build de producción esta página no se incluye.
 const PaginaMarca = import.meta.env.DEV ? lazy(() => import('./paginas/PaginaMarca.jsx')) : null
-
-// Secciones que ya tienen su página; las demás muestran "Esta sección llega pronto."
-const HECHAS = ['/', '/reportes', '/tareas', '/usuarios', '/categorias', '/novedades', '/sanciones']
 
 export default function App() {
   return (
@@ -50,19 +51,19 @@ export default function App() {
             <Route path="/reportes/:id" element={<PaginaReporte />} />
             <Route path="/reportes/:id/editar" element={<PaginaEditarReporte />} />
             <Route path="/tareas" element={<PaginaTareas />} />
-            <Route path="/mi-cuenta" element={<PaginaMiCuenta />} />
+            <Route path="/usuarios" element={<PaginaUsuarios />} />
+            <Route path="/usuarios/nuevo" element={<PaginaNuevoUsuario />} />
+            <Route path="/usuarios/:id" element={<PaginaUsuario />} />
+            <Route path="/usuarios/:id/editar" element={<PaginaEditarUsuario />} />
             <Route path="/categorias" element={<PaginaCategorias />} />
             <Route path="/novedades" element={<PaginaNovedades />} />
             <Route path="/novedades/:id" element={<PaginaNovedad />} />
             <Route path="/sanciones" element={<PaginaSanciones />} />
             <Route path="/sanciones/nueva" element={<PaginaNuevaSancion />} />
-            <Route path="/usuarios" element={<PaginaUsuarios />} />
-            <Route path="/usuarios/nuevo" element={<PaginaNuevoUsuario />} />
-            <Route path="/usuarios/:id" element={<PaginaUsuario />} />
-            <Route path="/usuarios/:id/editar" element={<PaginaEditarUsuario />} />
-            {SECCIONES.filter(({ ruta }) => !HECHAS.includes(ruta)).map(({ ruta }) => (
-              <Route key={ruta} path={ruta} element={<PaginaPronto />} />
-            ))}
+            <Route path="/seguimiento" element={<PaginaSeguimiento />} />
+            <Route path="/seguimiento/:id" element={<PaginaGestorSeguimiento />} />
+            <Route path="/notificaciones" element={<PaginaNotificaciones />} />
+            <Route path="/mi-cuenta" element={<PaginaMiCuenta />} />
           </Route>
         </Route>
 

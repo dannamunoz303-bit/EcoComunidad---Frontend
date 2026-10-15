@@ -1,0 +1,109 @@
+.notificaciones__cabecera {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--espacio-3);
+}
+
+.notificaciones__cabecera .pestanas {
+  flex: 1 1 260px;
+}
+
+.notificaciones__panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--espacio-5);
+}
+
+.notificaciones__panel > * {
+  min-width: 0;
+}
+
+.notificaciones__filtros .campo {
+  flex: 0 1 260px;
+  max-width: 260px;
+}
+
+.notificaciones__vacio {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-3);
+  margin: 0;
+  padding: var(--espacio-5);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-tarjeta);
+  background: var(--superficie);
+  color: var(--tinta);
+  font-weight: 500;
+}
+
+.notificaciones__vacio svg {
+  flex: none;
+  color: var(--verde-hoja);
+}
+
+.lista-notificaciones {
+  display: grid;
+  gap: var(--espacio-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.notificacion {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--espacio-4);
+  padding: var(--espacio-4) var(--espacio-5);
+  border: 1px solid var(--borde);
+  border-radius: 18px;
+  background: var(--superficie);
+}
+
+.notificacion--sin-leer {
+  border-color: color-mix(in srgb, var(--verde-hoja) 45%, var(--borde));
+  background: color-mix(in srgb, var(--verde-hoja) 5%, var(--superficie));
+}
+
+.notificacion .punto-sin-leer {
+  margin-top: 8px;
+}
+
+.notificacion__texto {
+  flex: 1;
+  display: grid;
+  gap: var(--espacio-1);
+  min-width: 0;
+}
+
+.notificacion__mensaje {
+  overflow-wrap: anywhere;
+}
+
+.notificacion--sin-leer .notificacion__mensaje {
+  font-weight: 600;
+}
+
+.notificacion__fecha {
+  color: var(--tinta-suave);
+  font-size: 0.875rem;
+}
+
+.notificacion__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espacio-4);
+  margin-top: var(--espacio-1);
+}
+
+.notificacion__acciones a {
+  font-weight: 600;
+}
+
+.notificacion__acciones .boton-secundario {
+  min-height: 36px;
+  padding: var(--espacio-1) var(--espacio-4);
+  font-size: 0.9375rem;
+}

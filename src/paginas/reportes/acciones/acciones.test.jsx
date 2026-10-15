@@ -1,4 +1,4 @@
-import { act, fireEvent, screen, within } from '@testing-library/react'
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { guardarSesion } from '../../../api/sesion.js'
 import { ADMIN, montar, pedidos, responder, simularApi, urlActual } from '../../../pruebas/apiSimulada.jsx'
@@ -118,7 +118,8 @@ describe('Panel de acciones: botones por estado', () => {
 
     fireEvent.click(within(contenedor).getByRole('link', { name: 'Editar' }))
 
-    expect(urlActual()).toBe('/reportes/7/editar')
+    // La navegación va en una transición y la página de edición se descarga aparte
+    await waitFor(() => expect(urlActual()).toBe('/reportes/7/editar'))
   })
 })
 

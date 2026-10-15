@@ -295,3 +295,10 @@
     padding: var(--espacio-6) var(--espacio-4) var(--espacio-5);
   }
 }
+
+/* Mientras se descarga una sección: el logo centrado en el área de contenido */
+.cargando-seccion {
+  min-height: 50vh;
+  display: grid;
+  place-items: center;
+}
