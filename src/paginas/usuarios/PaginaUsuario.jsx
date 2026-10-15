@@ -2,6 +2,8 @@ import { ArrowLeft, ClipboardList, Copy, KeyRound, ListChecks, Lock, Pencil, Ref
 import { useCallback, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { obtenerSeguimientoGestor } from '../../api/seguimiento.js'
+import { listarReportes } from '../../api/reportes.js'
+import { listarSanciones } from '../../api/sanciones.js'
 import { inactivarUsuario, obtenerUsuario, reactivarUsuario, restablecerContrasena } from '../../api/usuarios.js'
 import Dialogo from '../../componentes/Dialogo.jsx'
 import EstadoUsuario from '../../componentes/EstadoUsuario.jsx'
@@ -9,9 +11,12 @@ import { useAvisos } from '../../componentes/avisos/useAvisos.js'
 import Brotico from '../../marca/Brotico.jsx'
 import { useSesion } from '../../sesion/useSesion.js'
 import { formatearFechaHoraCorta, formatearFechaHora } from '../../utilidades/fechas.js'
+import { tieneBloqueoVigente } from '../../utilidades/sanciones.js'
 import { useCarga } from '../../utilidades/useCarga.js'
 import { NOMBRES_ROL, nombreCompleto } from '../../utilidades/usuarios.js'
 import DialogoConfirmar from '../reportes/acciones/DialogoConfirmar.jsx'
+import DialogoLevantarBloqueo from '../sanciones/DialogoLevantarBloqueo.jsx'
+import TablaSanciones from '../sanciones/TablaSanciones.jsx'
 import { copiarTexto } from './portapapeles.js'
 import '../reportes/detalle.css'
 import './usuarios.css'
@@ -69,6 +74,27 @@ function DetalleUsuario({ usuario, alCambiar }) {
   const { usuario: yo } = useSesion()
   const [temporal, setTemporal] = useState(null)
   const esUnoMismo = yo?.id === usuario.id
+  const esCiudadano = usuario.rol === 'ciudadano'
+
+  // Sanciones del ciudadano (las 5 más recientes se muestran aquí).
+  const cargarSanciones = useCallback(
+    () => (esCiudadano ? listarSanciones({ ciudadano: usuario.id }) : Promise.resolve([])),
+    [esCiudadano, usuario.id],
+  )
+  const sanciones = useCarga(cargarSanciones)
+  // Títulos de los reportes relacionados (la sanción solo trae el id).
+  const cargarTitulos = useCallback(
+    async () =>
+      esCiudadano ? Object.fromEntries((await listarReportes()).map((r) => [r.id, r.titulo])) : {},
+    [esCiudadano],
+  )
+  const titulos = useCarga(cargarTitulos)
+  const recientes = [...(sanciones.datos ?? [])]
+    .sort((a, b) => new Date(b.fecha_inicio) - new Date(a.fecha_inicio) || b.id - a.id)
+    .slice(0, 5)
+  // Un inactivo con un bloqueo vigente también se puede levantar (RN-21).
+  const bloqueoSinEstado = usuario.estado !== 'bloqueado' && tieneBloqueoVigente(sanciones.datos ?? [])
+  const recargarSanciones = sanciones.reintentar
   const { mostrarAviso } = useAvisos()
   const [abierto, setAbierto] = useState(null)
   const nombre = nombreCompleto(usuario)
@@ -101,9 +127,15 @@ function DetalleUsuario({ usuario, alCambiar }) {
           <p>
             {/* La hora termina en "p. m.": no se repite el punto */}
             Este ciudadano está bloqueado {hasta ?? 'de forma permanente.'}
-            {hasta && !hasta.endsWith('.') ? '.' : ''} Los bloqueos se manejan en Sanciones.{' '}
-            <Link to={`/sanciones?ciudadano=${usuario.id}`}>Ir a Sanciones</Link>
+            {hasta && !hasta.endsWith('.') ? '.' : ''}
           </p>
+          <div className="aviso__acciones">
+            <button type="button" className="boton-secundario" onClick={() => setAbierto('levantar')}>
+              <Lock size={18} aria-hidden="true" />
+              Levantar bloqueo
+            </button>
+            <Link to={`/sanciones?ciudadano=${usuario.id}`}>Ver sanciones</Link>
+          </div>
         </div>
       )}
 
@@ -176,6 +208,37 @@ function DetalleUsuario({ usuario, alCambiar }) {
         )}
       </section>
 
+      {esCiudadano && (
+        <section className="detalle__seccion" aria-labelledby="titulo-sanciones-usuario">
+          <h3 id="titulo-sanciones-usuario" className="detalle__subtitulo">
+            Sanciones
+          </h3>
+          {sanciones.cargando && !sanciones.datos ? (
+            <p className="texto-suave">Cargando sus sanciones…</p>
+          ) : sanciones.error ? (
+            <p className="texto-suave">No pudimos cargar sus sanciones.</p>
+          ) : recientes.length === 0 ? (
+            <p className="texto-suave">No tiene sanciones.</p>
+          ) : (
+            <TablaSanciones
+              sanciones={recientes}
+              titulosReportes={titulos.datos ?? {}}
+              conCiudadano={false}
+              titulo="Sanciones más recientes"
+            />
+          )}
+          <div className="usuario__acciones">
+            {sanciones.datos?.length > 0 && <Link to={`/sanciones?ciudadano=${usuario.id}`}>Ver todas</Link>}
+            {bloqueoSinEstado && (
+              <button type="button" className="boton-secundario" onClick={() => setAbierto('levantar')}>
+                <Lock size={18} aria-hidden="true" />
+                Levantar bloqueo
+              </button>
+            )}
+          </div>
+        </section>
+      )}
+
       <section className="detalle__seccion" aria-labelledby="titulo-contrasena-usuario">
         <h3 id="titulo-contrasena-usuario" className="detalle__subtitulo">
           Contraseña
@@ -193,6 +256,17 @@ function DetalleUsuario({ usuario, alCambiar }) {
           </div>
         )}
       </section>
+
+      {abierto === 'levantar' && (
+        <DialogoLevantarBloqueo
+          usuario={usuario}
+          alCerrar={() => setAbierto(null)}
+          alTerminar={() => {
+            recargarSanciones()
+            terminar('Bloqueo levantado.')
+          }}
+        />
+      )}
 
       {abierto === 'restablecer' && (
         <DialogoConfirmar

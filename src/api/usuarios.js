@@ -47,3 +47,9 @@ export async function restablecerContrasena(id) {
   const { data } = await cliente.post(`/usuarios/${id}/restablecer-contrasena/`)
   return data
 }
+
+// RN-21: cierra los bloqueos vigentes del ciudadano. 400 si no tiene ninguno.
+export async function levantarBloqueo(id) {
+  const { data } = await cliente.post(`/usuarios/${id}/levantar-bloqueo/`)
+  return data
+}

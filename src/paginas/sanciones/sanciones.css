@@ -1,0 +1,232 @@
+.tabla-sanciones__motivo {
+  max-width: 36ch;
+  overflow-wrap: anywhere;
+}
+
+.sanciones__cabecera {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-3);
+}
+
+.sanciones__filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--espacio-4);
+}
+
+.sanciones__filtros .campo {
+  flex: 0 1 260px;
+  min-width: 0;
+}
+
+.sanciones__ciudadano {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espacio-3);
+}
+
+/* Formulario de nueva sanción */
+.nueva-sancion {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--espacio-5);
+  max-width: 880px;
+}
+
+.nueva-sancion > * {
+  min-width: 0;
+}
+
+.buscador-ciudadanos__resultados {
+  display: grid;
+  gap: var(--espacio-2);
+  max-height: 300px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.resultado-ciudadano {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--espacio-3);
+  width: 100%;
+  padding: var(--espacio-3) var(--espacio-4);
+  border: 1px solid var(--borde);
+  border-radius: 14px;
+  background: var(--superficie);
+  color: var(--tinta);
+  text-align: left;
+}
+
+.resultado-ciudadano:hover {
+  border-color: var(--verde-musgo);
+}
+
+.resultado-ciudadano__nombre {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.resultado-ciudadano__datos {
+  display: block;
+  color: var(--tinta-suave);
+  font-size: 0.8125rem;
+  font-weight: 400;
+  overflow-wrap: anywhere;
+}
+
+.ciudadano-elegido {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-3);
+  padding: var(--espacio-4);
+  border: 1px solid var(--verde-bosque);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--verde-bosque) 5%, var(--superficie));
+}
+
+.ciudadano-elegido__datos {
+  display: grid;
+  gap: var(--espacio-1);
+  min-width: 0;
+}
+
+.sugerencia {
+  display: grid;
+  gap: var(--espacio-2);
+  padding: var(--espacio-4);
+  border: 1px dashed var(--verde-musgo);
+  border-radius: 14px;
+  background: var(--fondo);
+}
+
+.sugerencia__titulo {
+  font-weight: 700;
+}
+
+.sugerencia > .boton-secundario {
+  justify-self: start;
+}
+
+.sugerencia__fila {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espacio-3);
+}
+
+.opciones-sancion {
+  display: grid;
+  gap: var(--espacio-2);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.opciones-sancion legend {
+  margin-bottom: var(--espacio-2);
+  padding: 0;
+  font-weight: 600;
+  font-size: 0.9375rem;
+}
+
+.opcion-sancion {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: var(--espacio-1) var(--espacio-3);
+  padding: var(--espacio-3) var(--espacio-4);
+  border: 1px solid var(--borde);
+  border-radius: 14px;
+  cursor: pointer;
+}
+
+.opcion-sancion:has(input:checked) {
+  border-color: var(--verde-bosque);
+  box-shadow: inset 0 0 0 1px var(--verde-bosque);
+}
+
+.opcion-sancion:has(input:focus-visible) {
+  outline: 3px solid var(--foco);
+  outline-offset: 2px;
+}
+
+.opcion-sancion input {
+  width: 18px;
+  height: 18px;
+  margin: 2px 0 0;
+  accent-color: var(--verde-bosque);
+}
+
+.opcion-sancion input:focus-visible {
+  outline: none;
+}
+
+.opcion-sancion__efecto {
+  grid-column: 2;
+  color: var(--tinta-suave);
+  font-size: 0.875rem;
+}
+
+.aviso-sancion {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--espacio-2);
+  margin: 0;
+  padding: var(--espacio-3) var(--espacio-4);
+  border: 1px solid var(--ambar);
+  border-left-width: 4px;
+  border-radius: var(--radio-campo);
+  background: var(--superficie);
+  color: var(--tinta);
+}
+
+.aviso-sancion svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--ambar);
+}
+
+.resumen-sancion {
+  display: grid;
+  gap: var(--espacio-2);
+  margin: 0;
+}
+
+.resumen-sancion dt {
+  color: var(--tinta-suave);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.resumen-sancion dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.formulario-sancion__pie {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--espacio-3);
+}
+
+.sanciones__vacio {
+  margin: 0;
+  padding: var(--espacio-5);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-tarjeta);
+  background: var(--superficie);
+  color: var(--tinta);
+  font-weight: 500;
+}

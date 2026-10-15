@@ -131,6 +131,31 @@
   --color-estado: var(--verde-bosque);
 }
 
+/* Sanciones: advertencia, bloqueo temporal y permanente (arcilla oscuro) */
+.tipo-sancion {
+  display: inline-grid;
+  justify-items: start;
+  gap: 2px;
+}
+
+.tipo-sancion--advertencia {
+  --color-estado: var(--ambar);
+}
+
+.tipo-sancion--bloqueo_temporal {
+  --color-estado: var(--arcilla);
+}
+
+.tipo-sancion--bloqueo_permanente {
+  --color-estado: color-mix(in srgb, var(--arcilla) 70%, var(--tinta));
+  background: color-mix(in srgb, var(--arcilla) 24%, var(--superficie));
+}
+
+.tipo-sancion__vigencia {
+  color: var(--tinta-suave);
+  font-size: 0.8125rem;
+}
+
 /* En proceso: el punto late para indicar actividad */
 .estado-reporte--en_proceso .estado-reporte__punto,
 .estado-tarea--en_proceso .estado-reporte__punto {

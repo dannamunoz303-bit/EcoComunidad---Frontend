@@ -207,3 +207,21 @@
   text-align: center;
   overflow-wrap: anywhere;
 }
+
+/* Botón y enlace dentro del aviso de bloqueo */
+.aviso--arcilla:has(.aviso__acciones) {
+  flex-wrap: wrap;
+}
+
+.aviso__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espacio-4);
+  width: 100%;
+  padding-left: 32px;
+}
+
+.aviso__acciones a {
+  font-weight: 600;
+}

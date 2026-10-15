@@ -334,14 +334,14 @@ describe('Detalle del usuario', () => {
     expect(screen.queryByRole('button', { name: 'Reactivar' })).not.toBeInTheDocument()
   })
 
-  it('un ciudadano bloqueado muestra el aviso con enlace a Sanciones', async () => {
+  it('un ciudadano bloqueado muestra el aviso con "Levantar bloqueo" y "Ver sanciones"', async () => {
     abrir('/usuarios/31')
     await screen.findByRole('heading', { level: 2, name: 'Luis Torres' })
 
-    expect(
-      screen.getByText(/Este ciudadano está bloqueado hasta 15 oct\. 2026, 3:00 p\. m\. Los bloqueos se manejan en Sanciones\./),
-    ).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Ir a Sanciones' })).toHaveAttribute('href', '/sanciones?ciudadano=31')
+    expect(screen.getByText(/Este ciudadano está bloqueado hasta 15 oct\. 2026, 3:00 p\. m\./)).toBeInTheDocument()
+    expect(screen.queryByText(/Los bloqueos se manejan en Sanciones/)).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Levantar bloqueo' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Ver sanciones' })).toHaveAttribute('href', '/sanciones?ciudadano=31')
   })
 
   it('el bloqueo permanente se nombra así en el aviso', async () => {
