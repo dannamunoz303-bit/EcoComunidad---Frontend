@@ -16,9 +16,22 @@ Otros comandos: `npm run lint`, `npm test`, `npm run build`, `npm run preview`.
 
 | Variable | Qué es | Valor |
 | --- | --- | --- |
-| `VITE_API_URL` | URL base de la API (sin `/` final) | `https://ecocomunidad-backend-production.up.railway.app/api` |
+| `VITE_API_URL` | URL base de la API (sin `/` final) | Local: `http://localhost:8000/api` · Producción: `https://ecocomunidad-backend-production.up.railway.app/api` |
 
-`.env` no se sube al repositorio; `.env.example` sí.
+`.env` no se sube al repositorio; `.env.example` sí. Si falta `VITE_API_URL`, la consola del navegador muestra un error.
+
+## Publicar en Vercel
+
+- Framework: **Vite**.
+- Comando de build: `npm run build`.
+- Carpeta de salida: `dist`.
+- Variable de entorno en Vercel: `VITE_API_URL=https://ecocomunidad-backend-production.up.railway.app/api`.
+- `vercel.json` redirige todas las rutas a `index.html` para que al recargar `/reportes`, `/usuarios`, etc. no salga 404.
+
+Recordatorios:
+
+- Agrega la dirección de Vercel (por ejemplo `https://tu-proyecto.vercel.app`) a `CORS_ALLOWED_ORIGINS` en Railway.
+- Si el login falla después de mucho tiempo sin uso, enciende la base de datos en Aiven.
 
 ## Estructura
 

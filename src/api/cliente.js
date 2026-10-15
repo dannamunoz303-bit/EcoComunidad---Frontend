@@ -12,6 +12,11 @@ export const CODIGOS_ESTADO_DENEGADO = ['usuario_inactivo', 'usuario_bloqueado',
 const RUTA_LOGIN = '/auth/login/'
 const RUTA_REFRESH = '/auth/refresh/'
 
+// La URL del backend viene solo de VITE_API_URL (.env en local, variables de entorno en Vercel).
+if (!import.meta.env.VITE_API_URL) {
+  console.error('Falta VITE_API_URL: define la URL del backend en .env (local) o en las variables de entorno de Vercel.')
+}
+
 const cliente = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
 })
