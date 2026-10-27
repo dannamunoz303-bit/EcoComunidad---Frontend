@@ -29,6 +29,8 @@ Usar `transform-box: view-box` en las hojas y las losas. Con `prefers-reduced-mo
 
 ## Brotico (personaje)
 
+> **Nota:** Brotico se retiró del panel en octubre de 2026.
+
 - Es la misma planta con carita. Aparece **solo en momentos especiales**, nunca en todas las pantallas. En el resto de la app manda el logo.
 - Estados (archivos en esta carpeta):
 
@@ -49,7 +51,7 @@ Usar `transform-box: view-box` en las hojas y las losas. Con `prefers-reduced-mo
 | Verde hoja (acentos, gráficas) | verde-hoja | `#3E9B63` |
 | Verde texto suave ("Eco", etiquetas) | verde-musgo | `#3B7A55` |
 | Verde claro (detalles sobre verde oscuro) | verde-brote | `#A8D9B8` |
-| Cuerpo de Brotico | verde-brotico | `#5BB37E` |
+| Verde medio | verde-medio | `#5BB37E` |
 | Fondo de la app | fondo | `#F3F6F1` |
 | Tarjetas | superficie | `#FFFFFF` |
 | Bordes | borde | `#DCE5DF` |

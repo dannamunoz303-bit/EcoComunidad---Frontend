@@ -117,11 +117,11 @@ describe('Seguimiento a los gestores', () => {
     expect(screen.getByRole('columnheader', { name: /Terminadas/ })).toHaveAttribute('aria-sort', 'descending')
   })
 
-  it('sin gestores muestra a Brotico y el enlace para crear uno', async () => {
+  it('sin gestores muestra el ícono y el enlace para crear uno', async () => {
     abrir('/seguimiento', { 'GET /seguimiento/gestores/': (c) => responder(c, 200, []) })
 
     expect(await screen.findByText('Todavía no hay gestores.')).toBeInTheDocument()
-    expect(screen.getByRole('img', { name: 'Brotico desanimado' })).toBeInTheDocument()
+    expect(document.querySelector('.icono-estado.lucide-inbox')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Crear un gestor' })).toHaveAttribute('href', '/usuarios/nuevo')
   })
 })

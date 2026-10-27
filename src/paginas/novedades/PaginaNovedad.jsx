@@ -11,7 +11,7 @@ import EstadoReporte from '../../componentes/EstadoReporte.jsx'
 import EstadoTarea from '../../componentes/EstadoTarea.jsx'
 import TipoNovedad from '../../componentes/TipoNovedad.jsx'
 import { useAvisos } from '../../componentes/avisos/useAvisos.js'
-import Brotico from '../../marca/Brotico.jsx'
+import IconoEstado from '../../componentes/IconoEstado.jsx'
 import { formatearFechaHora } from '../../utilidades/fechas.js'
 import { rolDeCreador } from '../../utilidades/novedades.js'
 import { useCarga } from '../../utilidades/useCarga.js'
@@ -272,7 +272,7 @@ export default function PaginaNovedad() {
   } else if (novedad.error?.response?.status === 404) {
     contenido = (
       <div className="detalle__no-existe">
-        <Brotico estado="triste" tamano={112} />
+        <IconoEstado tipo="no-existe" tamano={112} />
         <p>Esta novedad no existe.</p>
         <Link className="boton-principal" to="/novedades">
           Ir a la lista de novedades

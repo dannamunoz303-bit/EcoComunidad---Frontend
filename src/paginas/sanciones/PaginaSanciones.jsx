@@ -6,7 +6,7 @@ import { listarSanciones } from '../../api/sanciones.js'
 import { listarUsuarios, obtenerUsuario } from '../../api/usuarios.js'
 import EstadoUsuario from '../../componentes/EstadoUsuario.jsx'
 import { useAvisos } from '../../componentes/avisos/useAvisos.js'
-import Brotico from '../../marca/Brotico.jsx'
+import IconoEstado from '../../componentes/IconoEstado.jsx'
 import { NOMBRES_TIPO_SANCION, tieneBloqueoVigente } from '../../utilidades/sanciones.js'
 import { useCarga } from '../../utilidades/useCarga.js'
 import { nombreCompleto } from '../../utilidades/usuarios.js'
@@ -103,7 +103,7 @@ export default function PaginaSanciones() {
   } else if (visibles.length === 0 && hayFiltros) {
     contenido = (
       <div className="reportes__vacio">
-        <Brotico estado="triste" tamano={112} />
+        <IconoEstado tipo="sin-resultados" tamano={112} />
         <p>No encontramos sanciones con esos filtros.</p>
         <button type="button" className="boton-principal" onClick={() => setParams({})}>
           Quitar filtros

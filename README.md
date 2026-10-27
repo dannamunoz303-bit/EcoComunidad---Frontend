@@ -38,7 +38,7 @@ Recordatorios:
 ```
 src/
   api/          cliente axios (token, refresh, cierre de sesión) y sesion.js (tokens en localStorage)
-  marca/        Logo, LogoAnimado, Brotico, NombreMarca y los SVG de la marca
+  marca/        Logo, LogoAnimado, NombreMarca y los SVG de la marca
   styles/       tokens.css (colores, radios, espacios, sombras) y base.css
   sesion/       contexto de sesión (usuario de /auth/yo/), rutas protegidas y mensajes del login
   paginas/      una página por ruta

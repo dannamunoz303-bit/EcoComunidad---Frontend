@@ -538,7 +538,7 @@
   transform: translateX(-50%);
 }
 
-.esqueleto__brotico {
+.esqueleto__carga {
   display: grid;
   justify-items: center;
   gap: var(--espacio-2);

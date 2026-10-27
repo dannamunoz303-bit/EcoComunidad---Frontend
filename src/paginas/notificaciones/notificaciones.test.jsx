@@ -179,13 +179,13 @@ describe('Campana', () => {
     expect(within(panel).getByRole('link', { name: 'Ver todas' })).toHaveAttribute('href', '/notificaciones')
   })
 
-  it('sin notificaciones dice "No tienes notificaciones." sin Brotico', async () => {
+  it('sin notificaciones dice "No tienes notificaciones." sin ícono', async () => {
     abrir('/categorias', { lista: [] })
     fireEvent.click(await campana(0))
 
     const panel = await screen.findByRole('region', { name: 'Notificaciones recientes' })
     expect(await within(panel).findByText('No tienes notificaciones.')).toBeInTheDocument()
-    expect(within(panel).queryByRole('img', { name: /Brotico/ })).not.toBeInTheDocument()
+    expect(panel.querySelector('.icono-estado')).not.toBeInTheDocument()
   })
 })
 

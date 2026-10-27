@@ -181,11 +181,11 @@ describe('Lista de reportes', () => {
     expect(botonEstado('Todos')).toHaveTextContent('6')
   })
 
-  it('sin resultados muestra a Brotico y "Quitar filtros" funciona', async () => {
+  it('sin resultados muestra el ícono y "Quitar filtros" funciona', async () => {
     abrir('/reportes?q=zzzz&estado=pendiente')
 
     expect(await screen.findByText('No encontramos reportes con esos filtros. Prueba con otros.')).toBeInTheDocument()
-    expect(screen.getByRole('img', { name: 'Brotico desanimado' })).toBeInTheDocument()
+    expect(document.querySelector('.icono-estado.lucide-search-x')).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Quitar filtros' }))
 

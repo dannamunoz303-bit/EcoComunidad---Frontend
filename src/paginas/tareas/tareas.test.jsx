@@ -362,11 +362,11 @@ describe('Página /tareas', () => {
     expect(screen.getByRole('option', { name: 'Ernesto Paz (inactivo)' })).toBeInTheDocument()
   })
 
-  it('sin resultados muestra a Brotico y "Quitar filtros" funciona', async () => {
+  it('sin resultados muestra el ícono y "Quitar filtros" funciona', async () => {
     abrirTareas('/tareas?estado=cancelada&gestor=41')
 
     expect(await screen.findByText('No hay tareas con esos filtros.')).toBeInTheDocument()
-    expect(screen.getByRole('img', { name: 'Brotico desanimado' })).toBeInTheDocument()
+    expect(document.querySelector('.icono-estado.lucide-search-x')).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Quitar filtros' }))
 

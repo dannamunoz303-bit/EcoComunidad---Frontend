@@ -137,7 +137,7 @@ describe('Lista de usuarios', () => {
     abrir('/usuarios?rol=gestor&estado=bloqueado&q=zz')
 
     expect(await screen.findByText('No encontramos usuarios con esos filtros.')).toBeInTheDocument()
-    expect(screen.getByRole('img', { name: 'Brotico desanimado' })).toBeInTheDocument()
+    expect(document.querySelector('.icono-estado.lucide-search-x')).toBeInTheDocument()
     expect(screen.getByLabelText('Buscar')).toHaveValue('zz')
 
     fireEvent.click(screen.getByRole('button', { name: 'Quitar filtros' }))

@@ -4,7 +4,7 @@ import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { listarCategorias } from '../../../api/categorias.js'
 import { obtenerReporte } from '../../../api/reportes.js'
 import { useAvisos } from '../../../componentes/avisos/useAvisos.js'
-import Brotico from '../../../marca/Brotico.jsx'
+import IconoEstado from '../../../componentes/IconoEstado.jsx'
 import { useCarga } from '../../../utilidades/useCarga.js'
 import FormularioEditar from './FormularioEditar.jsx'
 import '../detalle.css'
@@ -38,7 +38,7 @@ export default function PaginaEditarReporte() {
   } else if (reporte.error?.response?.status === 404) {
     contenido = (
       <div className="detalle__no-existe">
-        <Brotico estado="triste" tamano={112} />
+        <IconoEstado tipo="no-existe" tamano={112} />
         <p>Este reporte no existe o fue borrado.</p>
         <Link className="boton-principal" to="/reportes">
           Ir a la lista de reportes

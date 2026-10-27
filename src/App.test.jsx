@@ -20,9 +20,9 @@ describe('rutas', () => {
     expect(screen.getByLabelText('Correo')).toBeInTheDocument()
   })
 
-  it('una ruta desconocida muestra el 404 con Brotico triste y enlace a /login', () => {
+  it('una ruta desconocida muestra el 404 con su ícono y enlace a /login', () => {
     enRuta('/no-existe')
-    expect(screen.getByRole('img', { name: 'Brotico desanimado' })).toBeInTheDocument()
+    expect(document.querySelector('.icono-estado.lucide-circle-alert')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /inicio de sesión/i })).toHaveAttribute('href', '/login')
   })
 })

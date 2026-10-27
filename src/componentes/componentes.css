@@ -296,6 +296,12 @@
   }
 }
 
+/* Ícono de los estados vacíos y de error */
+.icono-estado {
+  flex-shrink: 0;
+  color: var(--verde-hoja);
+}
+
 /* Mientras se descarga una sección: el logo centrado en el área de contenido */
 .cargando-seccion {
   min-height: 50vh;

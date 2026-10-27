@@ -4,7 +4,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { listarUsuarios } from '../../api/usuarios.js'
 import EstadoUsuario from '../../componentes/EstadoUsuario.jsx'
 import Pestanas from '../../componentes/Pestanas.jsx'
-import Brotico from '../../marca/Brotico.jsx'
+import IconoEstado from '../../componentes/IconoEstado.jsx'
 import { formatearFechaCorta } from '../../utilidades/fechas.js'
 import { useCarga } from '../../utilidades/useCarga.js'
 import { nombreCompleto } from '../../utilidades/usuarios.js'
@@ -122,7 +122,7 @@ export default function PaginaUsuarios() {
   } else if (visibles.length === 0) {
     contenido = (
       <div className="reportes__vacio">
-        <Brotico estado="triste" tamano={112} />
+        <IconoEstado tipo="sin-resultados" tamano={112} />
         <p>No encontramos usuarios con esos filtros.</p>
         {hayFiltros && (
           <button type="button" className="boton-principal" onClick={quitarFiltros}>

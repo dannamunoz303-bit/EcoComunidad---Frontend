@@ -4,7 +4,7 @@ import { useLocation, useSearchParams } from 'react-router-dom'
 import { listarCategorias } from '../../api/categorias.js'
 import { listarReportes } from '../../api/reportes.js'
 import { obtenerUsuario } from '../../api/usuarios.js'
-import Brotico from '../../marca/Brotico.jsx'
+import IconoEstado from '../../componentes/IconoEstado.jsx'
 import { useCarga } from '../../utilidades/useCarga.js'
 import FiltrosReportes from './FiltrosReportes.jsx'
 import { contarPorEstado, filtrarBase, hayFiltros, leerFiltros, ordenarRecientes } from './filtros.js'
@@ -98,7 +98,7 @@ export default function PaginaReportes() {
   } else if (visibles.length === 0) {
     contenido = (
       <div className="reportes__vacio">
-        <Brotico estado="triste" tamano={112} />
+        <IconoEstado tipo="sin-resultados" tamano={112} />
         <p>No encontramos reportes con esos filtros. Prueba con otros.</p>
         {hayFiltros(filtros) && (
           <button type="button" className="boton-principal" onClick={quitarFiltros}>

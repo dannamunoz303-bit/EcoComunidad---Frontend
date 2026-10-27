@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
-import Brotico from './Brotico.jsx'
+import IconoEstado from '../componentes/IconoEstado.jsx'
 import Logo from './Logo.jsx'
 
 describe('<Logo />', () => {
@@ -23,14 +23,17 @@ describe('<Logo />', () => {
   })
 })
 
-describe('<Brotico />', () => {
+describe('<IconoEstado />', () => {
   it.each([
-    ['saluda', 'Brotico saludando'],
-    ['triste', 'Brotico desanimado'],
-    ['florece', 'Brotico celebrando'],
-    ['piensa', 'Brotico pensando'],
-  ])('el estado %s tiene el aria-label "%s"', (estado, etiqueta) => {
-    render(<Brotico estado={estado} />)
-    expect(screen.getByRole('img', { name: etiqueta })).toHaveAttribute('aria-label', etiqueta)
+    ['vacio', 'lucide-inbox'],
+    ['sin-resultados', 'lucide-search-x'],
+    ['no-existe', 'lucide-circle-alert'],
+    ['pronto', 'lucide-hourglass'],
+  ])('el tipo %s dibuja el ícono %s, decorativo', (tipo, clase) => {
+    const { container } = render(<IconoEstado tipo={tipo} />)
+    const icono = container.querySelector('svg')
+    expect(icono).toHaveClass('icono-estado', clase)
+    expect(icono).toHaveAttribute('aria-hidden', 'true')
+    expect(icono).toHaveAttribute('width', '112')
   })
 })

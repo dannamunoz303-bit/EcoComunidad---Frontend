@@ -39,10 +39,6 @@
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
 }
 
-.rejilla--4 {
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-}
-
 .rejilla--colores {
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
 }
@@ -87,19 +83,6 @@
 
 .muestra--animado {
   justify-items: start;
-}
-
-.muestra--brotico {
-  justify-items: center;
-  text-align: center;
-}
-
-.muestra__texto {
-  font-weight: 500;
-}
-
-.muestra__uso {
-  font-size: 0.875rem;
 }
 
 .color {

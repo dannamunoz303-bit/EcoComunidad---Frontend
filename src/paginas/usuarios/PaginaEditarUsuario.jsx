@@ -5,7 +5,7 @@ import { erroresPorCampo, mensajeDeError } from '../../api/errores.js'
 import { editarUsuario, obtenerUsuario } from '../../api/usuarios.js'
 import Campo from '../../componentes/Campo.jsx'
 import { useAvisos } from '../../componentes/avisos/useAvisos.js'
-import Brotico from '../../marca/Brotico.jsx'
+import IconoEstado from '../../componentes/IconoEstado.jsx'
 import { useCarga } from '../../utilidades/useCarga.js'
 import { nombreCompleto } from '../../utilidades/usuarios.js'
 import { useEnvio } from '../reportes/acciones/useEnvio.js'
@@ -131,7 +131,7 @@ export default function PaginaEditarUsuario() {
   } else if (usuario.error?.response?.status === 404) {
     contenido = (
       <div className="detalle__no-existe">
-        <Brotico estado="triste" tamano={112} />
+        <IconoEstado tipo="no-existe" tamano={112} />
         <p>Este usuario no existe.</p>
         <Link className="boton-principal" to="/usuarios">
           Ir a la lista de usuarios

@@ -90,13 +90,13 @@ describe('Lista de categorías', () => {
     expect(nombres()).toEqual(['Árboles caídos', 'Basura'])
   })
 
-  it('sin categorías muestra a Brotico con el mensaje para crear la primera', async () => {
+  it('sin categorías muestra el ícono con el mensaje para crear la primera', async () => {
     abrir('/categorias', { 'GET /categorias/': (c) => responder(c, 200, []) })
 
     expect(
       await screen.findByText('Todavía no hay categorías. Crea la primera para que los ciudadanos puedan reportar.'),
     ).toBeInTheDocument()
-    expect(screen.getByRole('img', { name: 'Brotico desanimado' })).toBeInTheDocument()
+    expect(document.querySelector('.icono-estado.lucide-inbox')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Nueva categoría' })).toBeInTheDocument()
   })
 

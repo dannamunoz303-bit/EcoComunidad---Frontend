@@ -35,10 +35,3 @@ export const VARIANTES = {
     comunidad: 'currentColor',
   },
 }
-
-export const ESTADOS_BROTICO = {
-  saluda: 'Brotico saludando',
-  triste: 'Brotico desanimado',
-  florece: 'Brotico celebrando',
-  piensa: 'Brotico pensando',
-}

@@ -4,7 +4,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { listarTareas } from '../../api/tareas.js'
 import { listarUsuarios } from '../../api/usuarios.js'
 import EstadoTarea from '../../componentes/EstadoTarea.jsx'
-import Brotico from '../../marca/Brotico.jsx'
+import IconoEstado from '../../componentes/IconoEstado.jsx'
 import { formatearFechaCorta, tiempoRelativo } from '../../utilidades/fechas.js'
 import { useCarga } from '../../utilidades/useCarga.js'
 import '../reportes/reportes.css'
@@ -99,7 +99,7 @@ export default function PaginaTareas() {
   } else if (visibles.length === 0) {
     contenido = (
       <div className="reportes__vacio">
-        <Brotico estado="triste" tamano={112} />
+        <IconoEstado tipo="sin-resultados" tamano={112} />
         <p>No hay tareas con esos filtros.</p>
         {(estado || gestor) && (
           <button type="button" className="boton-principal" onClick={() => setParams(new URLSearchParams())}>

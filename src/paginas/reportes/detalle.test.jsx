@@ -218,7 +218,7 @@ describe('Detalle del reporte', () => {
     montar('/reportes/999')
 
     expect(await screen.findByText('Este reporte no existe o fue borrado.')).toBeInTheDocument()
-    expect(screen.getByRole('img', { name: 'Brotico desanimado' })).toBeInTheDocument()
+    expect(document.querySelector('.icono-estado.lucide-circle-alert')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Ir a la lista de reportes' })).toHaveAttribute('href', '/reportes')
   })
 })

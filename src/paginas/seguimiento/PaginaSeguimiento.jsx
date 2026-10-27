@@ -3,7 +3,7 @@ import { useMemo } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { listarSeguimientoGestores } from '../../api/seguimiento.js'
 import EstadoUsuario from '../../componentes/EstadoUsuario.jsx'
-import Brotico from '../../marca/Brotico.jsx'
+import IconoEstado from '../../componentes/IconoEstado.jsx'
 import { activasDe, textoHoras } from '../../utilidades/seguimiento.js'
 import { useCarga } from '../../utilidades/useCarga.js'
 import { nombreCompleto } from '../../utilidades/usuarios.js'
@@ -91,7 +91,7 @@ export default function PaginaSeguimiento() {
   } else if (total === 0) {
     contenido = (
       <div className="reportes__vacio">
-        <Brotico estado="triste" tamano={112} />
+        <IconoEstado tipo="vacio" tamano={112} />
         <p>Todavía no hay gestores.</p>
         <Link className="boton-principal" to="/usuarios/nuevo">
           Crear un gestor

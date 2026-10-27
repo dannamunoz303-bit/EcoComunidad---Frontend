@@ -213,14 +213,14 @@ describe('Historial de sanciones', () => {
     abrir('/sanciones', { sanciones: [] })
 
     expect(await screen.findByText('Todavía no hay sanciones.')).toBeInTheDocument()
-    expect(screen.queryByRole('img', { name: /Brotico/ })).not.toBeInTheDocument()
+    expect(document.querySelector('.icono-estado')).not.toBeInTheDocument()
   })
 
-  it('sin resultados con filtros muestra a Brotico y "Quitar filtros"', async () => {
+  it('sin resultados con filtros muestra el ícono y "Quitar filtros"', async () => {
     abrir('/sanciones?ciudadano=33')
 
     expect(await screen.findByText('No encontramos sanciones con esos filtros.')).toBeInTheDocument()
-    expect(screen.getByRole('img', { name: 'Brotico desanimado' })).toBeInTheDocument()
+    expect(document.querySelector('.icono-estado.lucide-search-x')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Quitar filtros' }))
     expect(urlActual()).toBe('/sanciones')
   })

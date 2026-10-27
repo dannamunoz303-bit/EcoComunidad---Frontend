@@ -151,7 +151,7 @@ describe('Resumen: datos', () => {
     await esperarDatos()
 
     expect(screen.getByText('Todo al día: no hay reportes por revisar.')).toBeInTheDocument()
-    expect(screen.queryByRole('img', { name: /Brotico/ })).not.toBeInTheDocument()
+    expect(document.querySelector('.icono-estado')).not.toBeInTheDocument()
   })
 
   it('tareas atrasadas en 0 no se ve en ámbar', async () => {
@@ -202,14 +202,14 @@ describe('Resumen: carga y errores', () => {
     expect(screen.queryByTestId('esqueleto-resumen')).not.toBeInTheDocument()
   })
 
-  it('si la carga pasa de 1 s aparece Brotico pensando', async () => {
+  it('si la carga pasa de 1 s aparece el logo con el aviso', async () => {
     const [manejador] = respuestaPendiente()
     abrirResumen(manejador)
 
     expect(
       await screen.findByText('Revisando los reportes del barrio…', {}, { timeout: 2000 }),
     ).toBeInTheDocument()
-    expect(screen.getByRole('img', { name: 'Brotico pensando' })).toBeInTheDocument()
+    expect(within(screen.getByTestId('esqueleto-resumen')).getByRole('img', { name: 'EcoComunidad' })).toBeInTheDocument()
   })
 
   it('un error muestra "Reintentar" y al pulsarlo vuelve a pedir los datos', async () => {
@@ -217,7 +217,7 @@ describe('Resumen: carga y errores', () => {
     const adaptador = abrirResumen((c) => (falla ? responder(c, 500) : responder(c, 200, resumen())))
 
     expect(await screen.findByText('No pudimos cargar el resumen.')).toBeInTheDocument()
-    expect(screen.queryByRole('img', { name: /Brotico/ })).not.toBeInTheDocument()
+    expect(document.querySelector('.icono-estado')).not.toBeInTheDocument()
     const antes = pedidos(adaptador, RUTA)
 
     falla = false

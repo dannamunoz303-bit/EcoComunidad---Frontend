@@ -4,7 +4,7 @@ import { Link, useParams } from 'react-router-dom'
 import { obtenerSeguimientoGestor } from '../../api/seguimiento.js'
 import EstadoTarea from '../../componentes/EstadoTarea.jsx'
 import EstadoUsuario from '../../componentes/EstadoUsuario.jsx'
-import Brotico from '../../marca/Brotico.jsx'
+import IconoEstado from '../../componentes/IconoEstado.jsx'
 import { tiempoRelativo } from '../../utilidades/fechas.js'
 import { activasDe, textoHoras } from '../../utilidades/seguimiento.js'
 import { useCarga } from '../../utilidades/useCarga.js'
@@ -121,7 +121,7 @@ export default function PaginaGestorSeguimiento() {
   } else if (gestor.error?.response?.status === 404) {
     contenido = (
       <div className="detalle__no-existe">
-        <Brotico estado="triste" tamano={112} />
+        <IconoEstado tipo="no-existe" tamano={112} />
         <p>Este gestor no existe.</p>
         <Link className="boton-principal" to="/seguimiento">
           Ir al seguimiento

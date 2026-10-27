@@ -78,7 +78,7 @@ describe('login', () => {
 
     const aviso = await screen.findByText(mensaje)
     expect(aviso.closest('[aria-live]')).toBeInTheDocument()
-    expect(screen.queryByRole('img', { name: /Brotico/ })).not.toBeInTheDocument()
+    expect(document.querySelector('.icono-estado')).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Ingresar' })).toBeEnabled()
     expect(leerAccess()).toBeNull()
   })
@@ -242,7 +242,7 @@ describe('bienvenida', () => {
     await ingresar()
 
     expect(await screen.findByText(textoBienvenida)).toBeInTheDocument()
-    expect(screen.getByRole('img', { name: 'Brotico saludando' })).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Bienvenida' }).querySelector('img, [role="img"]')).not.toBeInTheDocument()
     expect(sessionStorage.getItem('ecocomunidad.bienvenida')).toBe('vista')
   })
 

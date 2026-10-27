@@ -176,18 +176,18 @@ describe('Lista de novedades', () => {
     expect(screen.getByRole('button', { name: 'Ciudadanos' })).toHaveAttribute('aria-pressed', 'true')
   })
 
-  it('sin abiertas muestra "Todo al día" sin Brotico', async () => {
+  it('sin abiertas muestra "Todo al día" sin ícono', async () => {
     abrir('/novedades', { rutas: { 'GET /novedades/': (c) => responder(c, 200, NOVEDADES.filter((n) => n.estado === 'atendida')) } })
 
     expect(await screen.findByText('Todo al día: no hay novedades por atender.')).toBeInTheDocument()
-    expect(screen.queryByRole('img', { name: /Brotico/ })).not.toBeInTheDocument()
+    expect(document.querySelector('.icono-estado')).not.toBeInTheDocument()
   })
 
-  it('sin resultados con filtros muestra a Brotico y "Quitar filtros"', async () => {
+  it('sin resultados con filtros muestra el ícono y "Quitar filtros"', async () => {
     abrir('/novedades?estado=atendida&tipo=ayuda')
 
     expect(await screen.findByText('No encontramos novedades con esos filtros.')).toBeInTheDocument()
-    expect(screen.getByRole('img', { name: 'Brotico desanimado' })).toBeInTheDocument()
+    expect(document.querySelector('.icono-estado.lucide-search-x')).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Quitar filtros' }))
 

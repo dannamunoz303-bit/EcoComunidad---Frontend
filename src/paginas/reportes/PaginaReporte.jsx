@@ -3,7 +3,7 @@ import { useCallback } from 'react'
 import { Link, useLocation, useParams } from 'react-router-dom'
 import { obtenerReporte, obtenerTareasDeReporte } from '../../api/reportes.js'
 import EstadoReporte from '../../componentes/EstadoReporte.jsx'
-import Brotico from '../../marca/Brotico.jsx'
+import IconoEstado from '../../componentes/IconoEstado.jsx'
 import { formatearFechaHora } from '../../utilidades/fechas.js'
 import { useCarga } from '../../utilidades/useCarga.js'
 import GaleriaFotos from './GaleriaFotos.jsx'
@@ -177,7 +177,7 @@ export default function PaginaReporte() {
   } else if (reporte.error?.response?.status === 404) {
     contenido = (
       <div className="detalle__no-existe">
-        <Brotico estado="triste" tamano={112} />
+        <IconoEstado tipo="no-existe" tamano={112} />
         <p>Este reporte no existe o fue borrado.</p>
         <Link className="boton-principal" to={volver}>
           Ir a la lista de reportes

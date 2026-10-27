@@ -1,6 +1,5 @@
 import { RotateCcw } from 'lucide-react'
 import { useState } from 'react'
-import Brotico from '../marca/Brotico.jsx'
 import Logo from '../marca/Logo.jsx'
 import LogoAnimado from '../marca/LogoAnimado.jsx'
 import './paginas.css'
@@ -15,19 +14,12 @@ const VARIANTES = [
 
 const TAMANOS = [96, 48, 24]
 
-const ESTADOS = [
-  { estado: 'saluda', uso: 'Bienvenida tras iniciar sesión', texto: '¡Hola de nuevo! Tu barrio te está esperando.' },
-  { estado: 'triste', uso: 'Listas vacías o sin resultados', texto: 'No encontramos reportes con esos filtros. Prueba con otros.' },
-  { estado: 'florece', uso: 'Un reporte queda resuelto', texto: '¡Un lugar más limpio! Gracias al trabajo del equipo.' },
-  { estado: 'piensa', uso: 'Cargas largas (más de 1 s)', texto: 'Revisando los reportes del barrio…' },
-]
-
 const COLORES = [
   ['verde-bosque', '#1E5A3A', 'Verde principal'],
   ['verde-hoja', '#3E9B63', 'Acentos, gráficas'],
   ['verde-musgo', '#3B7A55', 'Texto suave, "Eco"'],
   ['verde-brote', '#A8D9B8', 'Detalles sobre verde oscuro'],
-  ['verde-brotico', '#5BB37E', 'Cuerpo de Brotico'],
+  ['verde-medio', '#5BB37E', 'Verde medio'],
   ['fondo', '#F3F6F1', 'Fondo de la app'],
   ['superficie', '#FFFFFF', 'Tarjetas'],
   ['borde', '#DCE5DF', 'Bordes'],
@@ -78,19 +70,6 @@ export default function PaginaMarca() {
             Repetir
           </button>
         </article>
-      </section>
-
-      <section aria-labelledby="titulo-brotico">
-        <h2 id="titulo-brotico">Brotico</h2>
-        <div className="rejilla rejilla--4">
-          {ESTADOS.map(({ estado, uso, texto }) => (
-            <article key={estado} className="muestra muestra--brotico">
-              <Brotico estado={estado} />
-              <p className="muestra__texto">{texto}</p>
-              <p className="texto-suave muestra__uso">{uso}</p>
-            </article>
-          ))}
-        </div>
       </section>
 
       <section aria-labelledby="titulo-colores">

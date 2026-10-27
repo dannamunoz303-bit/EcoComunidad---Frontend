@@ -4,7 +4,7 @@ import { useSearchParams } from 'react-router-dom'
 import { listarNovedades } from '../../api/novedades.js'
 import { listarUsuarios } from '../../api/usuarios.js'
 import Pestanas from '../../componentes/Pestanas.jsx'
-import Brotico from '../../marca/Brotico.jsx'
+import IconoEstado from '../../componentes/IconoEstado.jsx'
 import { rolDeCreador } from '../../utilidades/novedades.js'
 import { useCarga } from '../../utilidades/useCarga.js'
 import TarjetaNovedad from './TarjetaNovedad.jsx'
@@ -99,7 +99,7 @@ export default function PaginaNovedades() {
   } else if (visibles.length === 0 && hayFiltros) {
     contenido = (
       <div className="reportes__vacio">
-        <Brotico estado="triste" tamano={112} />
+        <IconoEstado tipo="sin-resultados" tamano={112} />
         <p>No encontramos novedades con esos filtros.</p>
         <button type="button" className="boton-principal" onClick={quitarFiltros}>
           Quitar filtros

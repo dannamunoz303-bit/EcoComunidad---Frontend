@@ -5,7 +5,7 @@ import { activarCategoria, desactivarCategoria, listarCategorias } from '../../a
 import { listarReportes } from '../../api/reportes.js'
 import EstadoCategoria from '../../componentes/EstadoCategoria.jsx'
 import { useAvisos } from '../../componentes/avisos/useAvisos.js'
-import Brotico from '../../marca/Brotico.jsx'
+import IconoEstado from '../../componentes/IconoEstado.jsx'
 import { useCarga } from '../../utilidades/useCarga.js'
 import DialogoConfirmar from '../reportes/acciones/DialogoConfirmar.jsx'
 import DialogoCategoria from './DialogoCategoria.jsx'
@@ -126,7 +126,7 @@ export default function PaginaCategorias() {
   } else if (cantidades[''] === 0) {
     contenido = (
       <div className="reportes__vacio">
-        <Brotico estado="triste" tamano={112} />
+        <IconoEstado tipo="vacio" tamano={112} />
         <p>Todavía no hay categorías. Crea la primera para que los ciudadanos puedan reportar.</p>
       </div>
     )
