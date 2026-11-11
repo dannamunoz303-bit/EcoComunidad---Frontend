@@ -1,11 +1,11 @@
 /* Tokens de diseño. Fuente: docs/marca/marca.md */
 :root {
   /* Colores de marca */
-  --verde-bosque: #1e5a3a; /* verde principal: botones, barra lateral, títulos */
-  --verde-hoja: #3e9b63; /* acentos, gráficas */
-  --verde-musgo: #3b7a55; /* texto suave: "Eco", etiquetas */
-  --verde-brote: #a8d9b8; /* detalles sobre verde oscuro */
-  --verde-medio: #5bb37e;
+  --verde-bosque: #2e6b1f; /* verde principal: botones, barra lateral, títulos */
+  --verde-hoja: #5db33c; /* acentos, gráficas */
+  --verde-musgo: #44892f; /* texto suave: "Eco", etiquetas */
+  --verde-brote: #c6e8a9; /* detalles sobre verde oscuro */
+  --verde-medio: #7cc35c;
   --fondo: #f3f6f1; /* fondo de la app */
   --superficie: #ffffff; /* tarjetas */
   --borde: #dce5df; /* bordes */

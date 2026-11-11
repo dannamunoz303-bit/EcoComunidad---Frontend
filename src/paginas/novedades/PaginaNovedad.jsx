@@ -121,6 +121,7 @@ function Atajos({ novedad, rol, reporte, tareas, alUsar }) {
           textoBoton="Asignar"
           textoEnviando="Asignando…"
           excluir={conTareaActiva}
+          zona={reporte.zona ?? null}
           accion={(gestor) => asignarTarea(reporte.id, gestor.id)}
           alCerrar={() => setAbierto(null)}
           alTerminar={(gestor) => {

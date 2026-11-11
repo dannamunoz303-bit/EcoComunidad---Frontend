@@ -12,6 +12,7 @@ import IconoEstado from '../../componentes/IconoEstado.jsx'
 import { useSesion } from '../../sesion/useSesion.js'
 import { formatearFechaHoraCorta, formatearFechaHora } from '../../utilidades/fechas.js'
 import { tieneBloqueoVigente } from '../../utilidades/sanciones.js'
+import { nombreZona } from '../../utilidades/territorio.js'
 import { useCarga } from '../../utilidades/useCarga.js'
 import { NOMBRES_ROL, nombreCompleto } from '../../utilidades/usuarios.js'
 import DialogoConfirmar from '../reportes/acciones/DialogoConfirmar.jsx'
@@ -156,6 +157,12 @@ function DetalleUsuario({ usuario, alCambiar }) {
             <dt>Teléfono</dt>
             <dd>{usuario.telefono || '—'}</dd>
           </div>
+          {usuario.rol === 'gestor' && (
+            <div>
+              <dt>Zona</dt>
+              <dd>{nombreZona(usuario.zona) ?? 'Sin zona. Edita el gestor para elegirla.'}</dd>
+            </div>
+          )}
           <div>
             <dt>Fecha de registro</dt>
             <dd>

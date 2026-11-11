@@ -20,10 +20,19 @@ const usuario = (id, rol, nombre, apellido, cambios = {}) => ({
   ...cambios,
 })
 
+// GET /api/zonas/ (RN-24)
+const ZONAS = [
+  { id: 2, nombre: 'centro' },
+  { id: 1, nombre: 'norte' },
+  { id: 3, nombre: 'sur' },
+]
+
 const USUARIOS = [
-  usuario(40, 'gestor', 'Carlos', 'Ríos'),
-  usuario(41, 'gestor', 'Diana', 'López', { estado: 'inactivo' }),
-  usuario(42, 'gestor', 'Andrés', 'Mejía', { telefono: '3001234567' }),
+  usuario(40, 'gestor', 'Carlos', 'Ríos', { zona: ZONAS[0] }),
+  usuario(41, 'gestor', 'Diana', 'López', { estado: 'inactivo', zona: ZONAS[1] }),
+  usuario(42, 'gestor', 'Andrés', 'Mejía', { telefono: '3001234567', zona: ZONAS[2] }),
+  // Gestor creado antes de RN-24, todavía sin zona
+  usuario(43, 'gestor', 'Elena', 'Castro', { zona: null }),
   usuario(30, 'ciudadano', 'Ana', 'Pérez', { cedula: '52123456' }),
   usuario(31, 'ciudadano', 'Luis', 'Torres', { estado: 'bloqueado', bloqueado_hasta: '2026-10-15T15:00:00-05:00' }),
   usuario(32, 'ciudadano', 'Marta', 'Díaz', { estado: 'bloqueado', bloqueado_hasta: null }),
@@ -36,6 +45,7 @@ function abrir(ruta, rutas = {}) {
   const adaptador = simularApi({
     'GET /auth/yo/': (c) => responder(c, 200, ADMIN),
     'GET /usuarios/': (c) => responder(c, 200, USUARIOS),
+    'GET /zonas/': (c) => responder(c, 200, ZONAS),
     ...Object.fromEntries(USUARIOS.map((u) => [`GET /usuarios/${u.id}/`, (c) => responder(c, 200, u)])),
     ...rutas,
   })
@@ -68,10 +78,10 @@ describe('Lista de usuarios', () => {
     await tabla()
 
     expect(screen.getByRole('tab', { name: /Gestores/ })).toHaveAttribute('aria-selected', 'true')
-    expect(screen.getByRole('tab', { name: /Gestores/ })).toHaveTextContent('3')
+    expect(screen.getByRole('tab', { name: /Gestores/ })).toHaveTextContent('4')
     expect(screen.getByRole('tab', { name: /Ciudadanos/ })).toHaveTextContent('4')
     expect(screen.getByRole('tab', { name: /Administradores/ })).toHaveTextContent('1')
-    expect(nombres()).toEqual(['Carlos Ríos', 'Diana López', 'Andrés Mejía'])
+    expect(nombres()).toEqual(['Carlos Ríos', 'Diana López', 'Andrés Mejía', 'Elena Castro'])
 
     fireEvent.click(screen.getByRole('tab', { name: /Ciudadanos/ }))
     expect(urlActual()).toBe('/usuarios?rol=ciudadano')
@@ -102,6 +112,23 @@ describe('Lista de usuarios', () => {
     expect(fila).toHaveTextContent('3001234567')
     expect(fila).toHaveTextContent('Activo')
     expect(fila).toHaveTextContent('1 sept. 2026')
+  })
+
+  it('la pestaña de gestores muestra la zona; la de ciudadanos no tiene esa columna', async () => {
+    abrir('/usuarios?rol=gestor')
+    await tabla()
+
+    expect(screen.getByRole('columnheader', { name: 'Zona' })).toBeInTheDocument()
+    const zonaDe = (nombre) =>
+      within(screen.getByRole('link', { name: nombre }).closest('tr')).getByText(
+        (_, el) => el?.getAttribute('data-etiqueta') === 'Zona',
+      )
+    expect(zonaDe('Carlos Ríos')).toHaveTextContent('Centro')
+    expect(zonaDe('Andrés Mejía')).toHaveTextContent('Sur')
+    expect(zonaDe('Elena Castro')).toHaveTextContent('Sin zona')
+
+    fireEvent.click(screen.getByRole('tab', { name: /Ciudadanos/ }))
+    expect(screen.queryByRole('columnheader', { name: 'Zona' })).not.toBeInTheDocument()
   })
 
   it('filtra por estado y lo escribe en la URL', async () => {
@@ -143,7 +170,7 @@ describe('Lista de usuarios', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Quitar filtros' }))
 
     expect(urlActual()).toBe('/usuarios?rol=gestor')
-    expect(nombres()).toHaveLength(3)
+    expect(nombres()).toHaveLength(4)
   })
 
   it('"Crear usuario" lleva a /usuarios/nuevo', async () => {
@@ -183,6 +210,7 @@ describe('Crear usuario', () => {
     await screen.findByLabelText('Nombre')
 
     llenar()
+    fireEvent.change(await screen.findByRole('combobox', { name: 'Zona' }), { target: { value: '1' } })
     fireEvent.click(screen.getByRole('button', { name: 'Crear usuario' }))
 
     const cedula = screen.getByLabelText(/^Cédula/)
@@ -190,11 +218,37 @@ describe('Crear usuario', () => {
     expect(cedula).toHaveAttribute('aria-invalid', 'true')
     expect(cuerpo(adaptador, 'post', '/usuarios/')).toEqual({
       rol: 'gestor',
+      zona: 1,
       nombre: 'Sofía',
       apellido: 'Vargas',
       correo: 'sofia@eco.co',
       password: 'Clave-Segura-2026',
     })
+  })
+
+  it('la zona es obligatoria para el gestor: sin elegirla no se envía nada', async () => {
+    const adaptador = abrir('/usuarios/nuevo', { 'POST /usuarios/': (c) => responder(c, 201, {}) })
+    const zona = await screen.findByRole('combobox', { name: 'Zona' })
+    await waitFor(() => expect(within(zona).getAllByRole('option').map((o) => o.textContent)).toEqual([
+      'Elige una zona',
+      'Centro',
+      'Norte',
+      'Sur',
+    ]))
+
+    llenar({ cedula: '1099' })
+    fireEvent.click(screen.getByRole('button', { name: 'Crear usuario' }))
+
+    expect(await screen.findByText('Elige la zona que atenderá el gestor.')).toBeInTheDocument()
+    expect(zona).toHaveAttribute('aria-invalid', 'true')
+    expect(pedidos(adaptador, 'POST /usuarios/')).toBe(0)
+  })
+
+  it('el administrador no tiene zona: el selector desaparece y no se envía', async () => {
+    abrir('/usuarios/nuevo')
+    await screen.findByRole('combobox', { name: 'Zona' })
+    fireEvent.click(screen.getByRole('radio', { name: 'Administrador' }))
+    expect(screen.queryByRole('combobox', { name: 'Zona' })).not.toBeInTheDocument()
   })
 
   it('crear administrador sin cédula pasa, muestra la contraseña una sola vez y lleva al detalle', async () => {
@@ -297,6 +351,7 @@ describe('Detalle del usuario', () => {
     expect(screen.getByText('Gestor ambiental')).toBeInTheDocument()
     expect(screen.getByText('carlos@eco.co')).toBeInTheDocument()
     expect(screen.getByText('1040')).toBeInTheDocument()
+    expect(screen.getByText('Zona').nextElementSibling).toHaveTextContent('Centro')
     expect(screen.getByRole('link', { name: 'Ver sus tareas' })).toHaveAttribute('href', '/tareas?gestor=40')
     expect(screen.getByRole('link', { name: 'Volver a usuarios' })).toHaveAttribute('href', '/usuarios?rol=gestor')
   })
@@ -430,6 +485,7 @@ describe('Editar usuario', () => {
 
     expect(await aviso('Cambios guardados.')).toBeInTheDocument()
     const enviado = cuerpo(adaptador, 'patch', '/usuarios/42/')
+    // La zona no cambió: no se envía
     expect(enviado).toEqual({ apellido: 'Mejía Restrepo', telefono: '3109998888' })
     for (const prohibido of ['rol', 'estado', 'password']) expect(enviado).not.toHaveProperty(prohibido)
     await waitFor(() => expect(urlActual()).toBe('/usuarios/42'))
@@ -446,6 +502,43 @@ describe('Editar usuario', () => {
 
     expect(await screen.findByText('Ya existe un usuario con este correo.')).toBeInTheDocument()
     expect(screen.getByLabelText('Correo')).toHaveAttribute('aria-invalid', 'true')
+  })
+
+  it('cambia la zona del gestor y la envía como id', async () => {
+    const adaptador = abrir('/usuarios/42/editar', {
+      'PATCH /usuarios/42/': (c) => responder(c, 200, { ...USUARIOS[2], zona: ZONAS[1] }),
+    })
+    const zona = await screen.findByRole('combobox', { name: 'Zona' })
+    await waitFor(() => expect(zona).toHaveValue('3'))
+
+    fireEvent.change(zona, { target: { value: '1' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar cambios' }))
+
+    expect(await aviso('Cambios guardados.')).toBeInTheDocument()
+    expect(cuerpo(adaptador, 'patch', '/usuarios/42/')).toEqual({ zona: 1 })
+  })
+
+  it('un gestor sin zona debe elegirla para poder guardar', async () => {
+    const adaptador = abrir('/usuarios/43/editar', {
+      'PATCH /usuarios/43/': (c) => responder(c, 200, { ...USUARIOS[3], ...JSON.parse(c.data), zona: ZONAS[0] }),
+    })
+    await screen.findByLabelText('Nombre')
+    expect(screen.getByText('Este gestor no tiene zona. Elige una para guardar.')).toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText(/^Teléfono/), { target: { value: '3001112222' } })
+    expect(screen.getByRole('button', { name: 'Guardar cambios' })).toBeDisabled()
+
+    fireEvent.change(screen.getByRole('combobox', { name: 'Zona' }), { target: { value: '2' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar cambios' }))
+
+    expect(await aviso('Cambios guardados.')).toBeInTheDocument()
+    expect(cuerpo(adaptador, 'patch', '/usuarios/43/')).toEqual({ telefono: '3001112222', zona: 2 })
+  })
+
+  it('un ciudadano no tiene selector de zona', async () => {
+    abrir('/usuarios/30/editar')
+    await screen.findByLabelText('Nombre')
+    expect(screen.queryByRole('combobox', { name: 'Zona' })).not.toBeInTheDocument()
   })
 })
 

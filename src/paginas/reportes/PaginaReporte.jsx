@@ -4,6 +4,7 @@ import { Link, useLocation, useParams } from 'react-router-dom'
 import { obtenerReporte, obtenerTareasDeReporte } from '../../api/reportes.js'
 import EstadoReporte from '../../componentes/EstadoReporte.jsx'
 import IconoEstado from '../../componentes/IconoEstado.jsx'
+import UrgenciaReporte from '../../componentes/UrgenciaReporte.jsx'
 import { formatearFechaHora } from '../../utilidades/fechas.js'
 import { useCarga } from '../../utilidades/useCarga.js'
 import GaleriaFotos from './GaleriaFotos.jsx'
@@ -38,7 +39,10 @@ function DetalleReporte({ reporte, tareas, desde, alCambiar }) {
       <header className="detalle__cabecera">
         <div className="detalle__titulo-fila">
           <h2 className="detalle__titulo">{reporte.titulo}</h2>
-          <EstadoReporte estado={reporte.estado} eliminado={reporte.eliminado} />
+          <span className="detalle__etiquetas">
+            <EstadoReporte estado={reporte.estado} eliminado={reporte.eliminado} />
+            <UrgenciaReporte urgencia={reporte.urgencia} />
+          </span>
         </div>
         <p className="detalle__meta">
           <span>Reporte #{reporte.id}</span>

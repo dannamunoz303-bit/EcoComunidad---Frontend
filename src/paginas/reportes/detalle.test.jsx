@@ -32,6 +32,10 @@ const REPORTE = {
   latitud: '4.71098600',
   longitud: '-74.07209200',
   estado: 'rechazado',
+  urgencia: 'alta',
+  municipio: { id: 15, nombre: 'Popayán' },
+  vereda: 'La Playa',
+  zona: { id: 2, nombre: 'centro' },
   motivo_rechazo: 'No es un tema ambiental.',
   eliminado: false,
   fecha_creacion: '2026-10-10T09:00:00-05:00',
@@ -79,6 +83,39 @@ const esperarDetalle = () => screen.findByRole('heading', { level: 2, name: 'Bas
 
 beforeEach(() => {
   simularApi({})
+})
+
+describe('Detalle del reporte: lugar y urgencia', () => {
+  const dato = (nombre) => screen.getByText(nombre, { selector: 'dt' }).nextElementSibling
+
+  it('muestra la urgencia junto al estado y el municipio, la vereda y la zona en la ubicación', async () => {
+    abrir()
+    await esperarDetalle()
+
+    const cabecera = screen.getByRole('heading', { level: 2, name: 'Basura en el parque Central' }).parentElement
+    expect(within(cabecera).getByText('Urgencia alta')).toHaveClass('urgencia--alta')
+    expect(dato('Municipio')).toHaveTextContent('Popayán')
+    expect(dato('Vereda')).toHaveTextContent('La Playa')
+    expect(dato('Zona')).toHaveTextContent('Centro')
+  })
+
+  it('un reporte viejo sin municipio muestra "Sin municipio" y guiones', async () => {
+    abrir({ ...REPORTE, municipio: null, vereda: null, zona: null, urgencia: 'baja' })
+    await esperarDetalle()
+
+    expect(dato('Municipio')).toHaveTextContent('Sin municipio')
+    expect(dato('Vereda')).toHaveTextContent('—')
+    expect(dato('Zona')).toHaveTextContent('—')
+    expect(screen.getByText('Urgencia baja')).toHaveClass('urgencia--baja')
+  })
+
+  it('sin urgencia (dato faltante) no muestra la etiqueta y no se rompe', async () => {
+    abrir({ ...REPORTE, urgencia: undefined, municipio: undefined, zona: undefined, vereda: undefined })
+    await esperarDetalle()
+
+    expect(document.querySelector('.urgencia')).toBeNull()
+    expect(dato('Municipio')).toHaveTextContent('Sin municipio')
+  })
 })
 
 describe('Detalle del reporte', () => {

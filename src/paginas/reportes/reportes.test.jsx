@@ -6,6 +6,15 @@ import { ADMIN, montar, responder, simularApi, urlActual } from '../../pruebas/a
 const haceHoras = (horas) => new Date(Date.now() - horas * 60 * 60 * 1000).toISOString()
 const ciudadano = { id: 30, nombre: 'Ana', apellido: 'Pérez' }
 
+// GET /api/zonas/ y los municipios de los reportes (RN-23)
+const ZONAS = [
+  { id: 2, nombre: 'centro' },
+  { id: 1, nombre: 'norte' },
+  { id: 3, nombre: 'sur' },
+]
+const POPAYAN = { municipio: { id: 15, nombre: 'Popayán' }, zona: ZONAS[0] }
+const CALOTO = { municipio: { id: 5, nombre: 'Caloto' }, zona: ZONAS[1] }
+
 // Campos tal como los manda GET /api/reportes/ (ReporteSerializer del backend).
 function reporte(id, cambios) {
   return {
@@ -20,6 +29,9 @@ function reporte(id, cambios) {
     latitud: '4.71098600',
     longitud: '-74.07209200',
     estado: 'pendiente',
+    urgencia: 'media',
+    ...POPAYAN,
+    vereda: null,
     motivo_rechazo: null,
     eliminado: false,
     fecha_creacion: haceHoras(id),
@@ -31,13 +43,15 @@ function reporte(id, cambios) {
   }
 }
 
+// En el orden en que los manda el backend al administrador (RN-25)
 const REPORTES = [
-  reporte(1, { titulo: 'Basura en el parque Central', direccion: 'Calle 10 # 5-20' }),
-  reporte(2, { titulo: 'Árbol caído en la avenida', categoria_id: 2, categoria: 'Árboles', estado: 'aprobado' }),
+  reporte(1, { titulo: 'Basura en el parque Central', direccion: 'Calle 10 # 5-20', urgencia: 'alta', vereda: 'La Playa' }),
+  reporte(2, { titulo: 'Árbol caído en la avenida', categoria_id: 2, categoria: 'Árboles', estado: 'aprobado', urgencia: 'alta', ...CALOTO }),
   reporte(3, { titulo: 'Escombros en la esquina', direccion: 'Carrera 7 frente al Parque', categoria_id: 3, categoria: 'Escombros', estado: 'resuelto' }),
   reporte(4, { titulo: 'Reporte que se borró', eliminado: true }),
-  reporte(5, { titulo: 'Humo de una fábrica', categoria_id: 4, categoria: 'Contaminación', estado: 'rechazado' }),
-  reporte(6, { titulo: 'Poda de árboles', categoria_id: 2, categoria: 'Árboles', estado: 'en_proceso' }),
+  // Reporte anterior a RN-23: sin municipio ni zona
+  reporte(5, { titulo: 'Humo de una fábrica', categoria_id: 4, categoria: 'Contaminación', estado: 'rechazado', municipio: null, zona: null }),
+  reporte(6, { titulo: 'Poda de árboles', categoria_id: 2, categoria: 'Árboles', estado: 'en_proceso', urgencia: 'baja', ...CALOTO }),
 ]
 
 const CATEGORIAS = [
@@ -47,11 +61,27 @@ const CATEGORIAS = [
   { id: 4, nombre: 'Contaminación', descripcion: '', activa: true },
 ]
 
-// El backend filtra por ?categoria=
-const respuestaReportes = (c) => {
-  const categoria = c.params?.categoria
-  return responder(c, 200, categoria ? REPORTES.filter((r) => String(r.categoria_id) === categoria) : REPORTES)
+// El backend filtra por ?categoria=, ?urgencia= y ?zona= (id o "sin" para los reportes sin municipio)
+const coincideZona = (r, zona) => {
+  if (!zona) return true
+  if (zona === 'sin') return !r.municipio
+  return String(r.zona?.id) === zona
 }
+const respuestaReportes = (c) => {
+  const { categoria, urgencia, zona } = c.params ?? {}
+  return responder(
+    c,
+    200,
+    REPORTES.filter(
+      (r) =>
+        (!categoria || String(r.categoria_id) === categoria) &&
+        (!urgencia || r.urgencia === urgencia) &&
+        coincideZona(r, zona),
+    ),
+  )
+}
+const pidioZona = (adaptador, zona) =>
+  adaptador.mock.calls.some(([c]) => c.url === '/reportes/' && c.params?.zona === zona)
 
 function abrir(ruta = '/reportes', rutas = {}) {
   guardarSesion({ access: 'acc-1', refresh: 'ref-1' })
@@ -59,6 +89,7 @@ function abrir(ruta = '/reportes', rutas = {}) {
     'GET /auth/yo/': (c) => responder(c, 200, ADMIN),
     'GET /reportes/': respuestaReportes,
     'GET /categorias/': (c) => responder(c, 200, CATEGORIAS),
+    'GET /zonas/': (c) => responder(c, 200, ZONAS),
     ...rutas,
   })
   montar(ruta)
@@ -76,8 +107,130 @@ beforeEach(() => {
   simularApi({})
 })
 
+describe('Lista de reportes: zona y urgencia', () => {
+  const fila = (titulo) => screen.getByRole('link', { name: titulo }).closest('tr')
+  const celda = (titulo, etiqueta) => fila(titulo).querySelector(`[data-etiqueta="${etiqueta}"]`)
+
+  it('respeta el orden del backend (urgencia primero) aunque las fechas no lo sigan', async () => {
+    // El backend manda primero la alta más antigua y luego la media más reciente
+    const enOrden = [
+      reporte(9, { titulo: 'Alta antigua', urgencia: 'alta', fecha_creacion: haceHoras(90) }),
+      reporte(8, { titulo: 'Alta reciente', urgencia: 'alta', fecha_creacion: haceHoras(2) }),
+      reporte(7, { titulo: 'Media reciente', urgencia: 'media', fecha_creacion: haceHoras(1) }),
+      reporte(10, { titulo: 'Baja antigua', urgencia: 'baja', fecha_creacion: haceHoras(100) }),
+    ]
+    abrir('/reportes', { 'GET /reportes/': (c) => responder(c, 200, enOrden) })
+    await tabla()
+
+    expect(titulosVisibles()).toEqual(['Alta antigua', 'Alta reciente', 'Media reciente', 'Baja antigua'])
+  })
+
+  it('cada fila muestra la urgencia con su color y el municipio, la vereda y la zona', async () => {
+    abrir()
+    await tabla()
+
+    const alta = within(celda('Basura en el parque Central', 'Urgencia')).getByText('Alta')
+    expect(alta).toHaveClass('urgencia--alta')
+    expect(within(celda('Poda de árboles', 'Urgencia')).getByText('Baja')).toHaveClass('urgencia--baja')
+    expect(within(celda('Escombros en la esquina', 'Urgencia')).getByText('Media')).toHaveClass('urgencia--media')
+
+    expect(celda('Basura en el parque Central', 'Lugar')).toHaveTextContent('PopayánVereda La PlayaZona Centro')
+    expect(celda('Árbol caído en la avenida', 'Lugar')).toHaveTextContent('CalotoZona Norte')
+  })
+
+  it('un reporte viejo sin municipio muestra "Sin municipio" sin romperse', async () => {
+    abrir()
+    await tabla()
+
+    expect(celda('Humo de una fábrica', 'Lugar')).toHaveTextContent(/^Sin municipio$/)
+  })
+
+  it('filtra por urgencia en el backend y la escribe en la URL', async () => {
+    const adaptador = abrir()
+    await tabla()
+
+    const urgencia = screen.getByLabelText('Urgencia')
+    expect(within(urgencia).getAllByRole('option').map((o) => o.textContent)).toEqual(['Todas', 'Alta', 'Media', 'Baja'])
+    fireEvent.change(urgencia, { target: { value: 'alta' } })
+
+    expect(urlActual()).toBe('/reportes?urgencia=alta')
+    expect(await screen.findByText('2 reportes')).toBeInTheDocument()
+    expect(titulosVisibles()).toEqual(['Basura en el parque Central', 'Árbol caído en la avenida'])
+    expect(adaptador.mock.calls.some(([c]) => c.url === '/reportes/' && c.params?.urgencia === 'alta')).toBe(true)
+  })
+
+  it('filtra por zona en el backend y la escribe en la URL', async () => {
+    const adaptador = abrir()
+    await tabla()
+    expect(adaptador.mock.calls.some(([c]) => c.url === '/reportes/' && 'zona' in (c.params ?? {}))).toBe(false)
+
+    const zona = screen.getByLabelText('Zona')
+    expect(within(zona).getAllByRole('option').map((o) => o.textContent)).toEqual([
+      'Todas',
+      'Centro',
+      'Norte',
+      'Sur',
+      'Sin municipio',
+    ])
+    fireEvent.change(zona, { target: { value: '1' } })
+
+    expect(urlActual()).toBe('/reportes?zona=1')
+    expect(await screen.findByText('2 reportes')).toBeInTheDocument()
+    expect(titulosVisibles()).toEqual(['Árbol caído en la avenida', 'Poda de árboles'])
+    expect(botonEstado('Todos')).toHaveTextContent('2')
+    expect(pidioZona(adaptador, '1')).toBe(true)
+  })
+
+  it('"Sin municipio" pide ?zona=sin y muestra los reportes viejos', async () => {
+    const adaptador = abrir('/reportes?zona=sin')
+    await tabla()
+
+    expect(screen.getByLabelText('Zona')).toHaveValue('sin')
+    expect(titulosVisibles()).toEqual(['Humo de una fábrica'])
+    expect(pidioZona(adaptador, 'sin')).toBe(true)
+  })
+
+  it('el navegador no vuelve a filtrar por zona: muestra lo que responde el backend', async () => {
+    // Si el panel filtrara por su cuenta, este reporte de Popayán (centro) no aparecería con ?zona=1
+    abrir('/reportes?zona=1', { 'GET /reportes/': (c) => responder(c, 200, [REPORTES[0]]) })
+    await tabla()
+
+    expect(titulosVisibles()).toEqual(['Basura en el parque Central'])
+  })
+
+  it('una zona inválida en la URL se ignora y no se envía', async () => {
+    const adaptador = abrir('/reportes?zona=abc')
+    await tabla()
+
+    expect(screen.getByLabelText('Zona')).toHaveValue('')
+    expect(adaptador.mock.calls.some(([c]) => c.url === '/reportes/' && 'zona' in (c.params ?? {}))).toBe(false)
+    expect(titulosVisibles()).toHaveLength(5)
+  })
+
+  it('lee zona y urgencia de la URL y "Quitar filtros" las borra', async () => {
+    abrir('/reportes?zona=3&urgencia=baja')
+    await screen.findByText('No encontramos reportes con esos filtros. Prueba con otros.')
+
+    expect(screen.getByLabelText('Urgencia')).toHaveValue('baja')
+    await screen.findByRole('option', { name: 'Sur' })
+    expect(screen.getByLabelText('Zona')).toHaveValue('3')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Quitar filtros' }))
+    expect(urlActual()).toBe('/reportes')
+    expect(await tabla()).toBeInTheDocument()
+  })
+
+  it('una urgencia desconocida en la URL se ignora', async () => {
+    const adaptador = abrir('/reportes?urgencia=altisima')
+    await tabla()
+
+    expect(screen.getByLabelText('Urgencia')).toHaveValue('')
+    expect(adaptador.mock.calls.some(([c]) => c.url === '/reportes/' && c.params?.urgencia)).toBe(false)
+  })
+})
+
 describe('Lista de reportes', () => {
-  it('muestra los reportes del más reciente al más antiguo, sin los eliminados', async () => {
+  it('muestra los reportes en el orden del backend, sin los eliminados', async () => {
     abrir()
     await tabla()
 

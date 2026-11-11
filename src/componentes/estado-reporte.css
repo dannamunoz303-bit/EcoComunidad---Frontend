@@ -179,3 +179,17 @@
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--verde-hoja) 35%, transparent);
   }
 }
+
+/* Urgencia del reporte (RN-25): alta en arcilla, media en ámbar, baja en verde */
+.urgencia--alta {
+  --color-estado: var(--arcilla);
+  font-weight: 700;
+}
+
+.urgencia--media {
+  --color-estado: var(--ambar);
+}
+
+.urgencia--baja {
+  --color-estado: var(--verde-musgo);
+}

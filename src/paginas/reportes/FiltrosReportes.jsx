@@ -1,10 +1,11 @@
 import { Search } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { ESTADOS_FILTRO } from './filtros.js'
+import { URGENCIAS, nombreZona } from '../../utilidades/territorio.js'
+import { ESTADOS_FILTRO, ZONA_SIN_MUNICIPIO } from './filtros.js'
 
 const ESPERA_BUSQUEDA_MS = 300
 
-export default function FiltrosReportes({ filtros, conteo, categorias, alCambiar }) {
+export default function FiltrosReportes({ filtros, conteo, categorias, zonas = [], alCambiar }) {
   // El texto se escribe en la URL 300 ms después de dejar de teclear.
   const [texto, setTexto] = useState(filtros.q)
   const [qAnterior, setQAnterior] = useState(filtros.q)
@@ -66,6 +67,35 @@ export default function FiltrosReportes({ filtros, conteo, categorias, alCambiar
                 {c.activa === false ? ' (inactiva)' : ''}
               </option>
             ))}
+          </select>
+        </div>
+
+        <div className="campo filtros-reportes__categoria">
+          <label htmlFor="filtro-urgencia">Urgencia</label>
+          <select id="filtro-urgencia" value={filtros.urgencia} onChange={(e) => alCambiar({ urgencia: e.target.value })}>
+            <option value="">Todas</option>
+            {URGENCIAS.map((u) => (
+              <option key={u.valor} value={u.valor}>
+                {u.nombre}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="campo filtros-reportes__categoria">
+          <label htmlFor="filtro-zona">Zona</label>
+          <select id="filtro-zona" value={filtros.zona} onChange={(e) => alCambiar({ zona: e.target.value })}>
+            <option value="">Todas</option>
+            {zonas.map((z) => (
+              <option key={z.id} value={String(z.id)}>
+                {nombreZona(z)}
+              </option>
+            ))}
+            {/* Mientras llegan las zonas, la elegida en la URL sigue visible */}
+            {filtros.zona && filtros.zona !== ZONA_SIN_MUNICIPIO && !zonas.some((z) => String(z.id) === filtros.zona) && (
+              <option value={filtros.zona}>Zona #{filtros.zona}</option>
+            )}
+            <option value={ZONA_SIN_MUNICIPIO}>Sin municipio</option>
           </select>
         </div>
 

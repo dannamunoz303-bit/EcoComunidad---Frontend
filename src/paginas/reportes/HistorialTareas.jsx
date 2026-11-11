@@ -148,6 +148,7 @@ export default function HistorialTareas({ tareas, cargando, error, reintentar, r
           textoBoton="Reasignar"
           textoEnviando="Reasignando…"
           excluir={excluir}
+          zona={reporte?.zona ?? null}
           accion={(gestor) => reasignarTarea(tareaAbierta.id, gestor.id)}
           alCerrar={cerrar}
           alTerminar={(gestor) => terminar(`Tarea reasignada a ${nombreDe(gestor)}.`)}

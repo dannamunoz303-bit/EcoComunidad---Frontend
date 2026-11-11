@@ -7,12 +7,24 @@ import Campo from '../../../componentes/Campo.jsx'
 import { useCarga } from '../../../utilidades/useCarga.js'
 import { useEnvio } from '../acciones/useEnvio.js'
 import { CENTRO_COLOMBIA, centroInicial, conOchoDecimales, leerCoordenada } from './coordenadas.js'
+import SelectorMunicipio from './SelectorMunicipio.jsx'
 
 const MapaEditable = lazy(() => import('./MapaEditable.jsx'))
 
-// Campos que el administrador puede editar (RN-09) y su largo en el backend.
-const CAMPOS = ['titulo', 'descripcion', 'categoria', 'direccion', 'descripcion_ubicacion', 'latitud', 'longitud']
-const MAXIMOS = { titulo: 150, direccion: 255, descripcion_ubicacion: 255 }
+// Campos que el administrador puede editar (RN-09, RN-23) y su largo en el backend.
+const CAMPOS = [
+  'titulo',
+  'descripcion',
+  'categoria',
+  'municipio',
+  'vereda',
+  'direccion',
+  'descripcion_ubicacion',
+  'latitud',
+  'longitud',
+]
+const MAXIMOS = { titulo: 150, vereda: 120, direccion: 255, descripcion_ubicacion: 255 }
+const IDS = ['categoria', 'municipio']
 
 // El backend guarda 8 decimales (RN-06).
 const ochoDecimales = (valor) => {
@@ -26,6 +38,9 @@ function valoresDe(reporte) {
     titulo: reporte.titulo ?? '',
     descripcion: reporte.descripcion ?? '',
     categoria: reporte.categoria_id ? String(reporte.categoria_id) : '',
+    // Los reportes anteriores a RN-23 pueden no tener municipio.
+    municipio: reporte.municipio?.id ? String(reporte.municipio.id) : '',
+    vereda: reporte.vereda ?? '',
     direccion: reporte.direccion ?? '',
     descripcion_ubicacion: reporte.descripcion_ubicacion ?? '',
     latitud: ochoDecimales(reporte.latitud),
@@ -38,7 +53,7 @@ function camposCambiados(original, actual) {
   const cambios = {}
   for (const campo of CAMPOS) {
     if (actual[campo] === original[campo]) continue
-    cambios[campo] = campo === 'categoria' ? Number(actual[campo]) : actual[campo]
+    cambios[campo] = IDS.includes(campo) ? Number(actual[campo]) : actual[campo]
   }
   return cambios
 }
@@ -69,8 +84,9 @@ export default function FormularioEditar({ reporte, categorias, volver, alGuarda
 
   const coordenadas = validarCoordenadas(original, valores)
   const coordenadasInvalidas = COORDENADAS.some((campo) => coordenadas[campo].error)
-  // Con el valor redondeado a 8 decimales, para comparar y enviar.
-  const normalizados = { ...valores }
+  // Con el valor redondeado a 8 decimales y la vereda sin espacios, para comparar y enviar.
+  // Vereda vacía: el backend la guarda como null.
+  const normalizados = { ...valores, vereda: valores.vereda.trim() }
   for (const campo of COORDENADAS) {
     if (coordenadas[campo].valor !== undefined) normalizados[campo] = conOchoDecimales(coordenadas[campo].valor)
   }
@@ -204,6 +220,33 @@ export default function FormularioEditar({ reporte, categorias, volver, alGuarda
         <h3 id="titulo-ubicacion-editar" className="detalle__subtitulo">
           Ubicación
         </h3>
+        <SelectorMunicipio
+          valor={valores.municipio}
+          error={errores.municipio}
+          alCambiar={(municipio) => setValores((v) => ({ ...v, municipio }))}
+        />
+        <Campo
+          id="editar-vereda"
+          etiqueta={
+            <>
+              Vereda o corregimiento<span className="campo__opcional"> (opcional)</span>
+            </>
+          }
+          error={errores.vereda}
+          ayuda={`Máximo ${MAXIMOS.vereda} caracteres.`}
+        >
+          {(aria) => (
+            <input
+              id="editar-vereda"
+              type="text"
+              autoComplete="off"
+              maxLength={MAXIMOS.vereda}
+              value={valores.vereda}
+              onChange={cambiar('vereda')}
+              {...aria}
+            />
+          )}
+        </Campo>
         <Campo id="editar-direccion" etiqueta="Dirección" error={errores.direccion} ayuda={`Máximo ${MAXIMOS.direccion} caracteres.`}>
           {(aria) => (
             <input

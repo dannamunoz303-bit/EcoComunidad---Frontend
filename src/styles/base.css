@@ -170,7 +170,8 @@ a {
   gap: var(--espacio-2);
 }
 
-.campo label {
+.campo label,
+.campo__etiqueta-suelta {
   font-weight: 600;
   font-size: 0.9375rem;
 }

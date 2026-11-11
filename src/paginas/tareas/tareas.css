@@ -117,3 +117,20 @@
   flex: 0 1 360px;
   min-width: 0;
 }
+
+/* Qué gestores se ofrecen según la zona del reporte (RN-24) */
+.lista-gestores__zona {
+  margin-bottom: var(--espacio-3);
+  color: var(--tinta-suave);
+  font-size: 0.9375rem;
+}
+
+.opcion-gestor__zona {
+  /* Debajo del nombre, sin mover la carga de la derecha */
+  grid-column: 2;
+  grid-row: 2;
+  margin-top: calc(-1 * var(--espacio-2));
+  color: var(--tinta-suave);
+  font-size: 0.8125rem;
+  font-weight: 500;
+}

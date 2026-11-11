@@ -5,7 +5,9 @@ import { listarTareas } from '../../api/tareas.js'
 import { listarUsuarios } from '../../api/usuarios.js'
 import EstadoTarea from '../../componentes/EstadoTarea.jsx'
 import IconoEstado from '../../componentes/IconoEstado.jsx'
+import UrgenciaReporte from '../../componentes/UrgenciaReporte.jsx'
 import { formatearFechaCorta, tiempoRelativo } from '../../utilidades/fechas.js'
+import { nombreMunicipio, nombreZona } from '../../utilidades/territorio.js'
 import { useCarga } from '../../utilidades/useCarga.js'
 import '../reportes/reportes.css'
 import './tareas.css'
@@ -115,6 +117,8 @@ export default function PaginaTareas() {
         <thead>
           <tr>
             <th scope="col">Reporte</th>
+            <th scope="col">Urgencia</th>
+            <th scope="col">Lugar</th>
             <th scope="col">Gestor</th>
             <th scope="col">Estado</th>
             <th scope="col">Asignación</th>
@@ -127,6 +131,22 @@ export default function PaginaTareas() {
               <td className="tabla-reportes__titulo">
                 {t.reporte ? <Link to={`/reportes/${t.reporte.id}`}>{t.reporte.titulo}</Link> : '—'}
                 {t.reporte?.categoria && <span className="tabla-reportes__direccion">{t.reporte.categoria}</span>}
+              </td>
+              <td data-etiqueta="Urgencia">
+                {t.reporte?.urgencia ? <UrgenciaReporte urgencia={t.reporte.urgencia} prefijo="" /> : '—'}
+              </td>
+              <td data-etiqueta="Lugar">
+                {t.reporte ? (
+                  <div>
+                    {/* Reportes anteriores a RN-23: sin municipio ni zona */}
+                    <span className={t.reporte.municipio ? undefined : 'texto-suave'}>{nombreMunicipio(t.reporte)}</span>
+                    {t.reporte.zona && (
+                      <span className="tabla-reportes__direccion">Zona {nombreZona(t.reporte.zona)}</span>
+                    )}
+                  </div>
+                ) : (
+                  '—'
+                )}
               </td>
               <td data-etiqueta="Gestor">{nombreDe(t.gestor)}</td>
               <td data-etiqueta="Estado">

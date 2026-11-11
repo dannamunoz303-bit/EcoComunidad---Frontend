@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom'
 import EstadoReporte from '../../componentes/EstadoReporte.jsx'
+import UrgenciaReporte from '../../componentes/UrgenciaReporte.jsx'
 import { formatearFechaCorta, tiempoRelativo } from '../../utilidades/fechas.js'
+import { nombreMunicipio, nombreZona } from '../../utilidades/territorio.js'
 
 const nombreCompleto = (persona) => (persona ? `${persona.nombre} ${persona.apellido}` : '—')
 
@@ -8,10 +10,12 @@ const nombreCompleto = (persona) => (persona ? `${persona.nombre} ${persona.apel
 export default function TablaReportes({ reportes, desde }) {
   return (
     <table className="tabla-reportes">
-      <caption className="solo-lector">Reportes, del más reciente al más antiguo</caption>
+      <caption className="solo-lector">Reportes, por urgencia (alta primero) y del más antiguo al más reciente</caption>
       <thead>
         <tr>
           <th scope="col">Título</th>
+          <th scope="col">Urgencia</th>
+          <th scope="col">Lugar</th>
           <th scope="col">Categoría</th>
           <th scope="col">Estado</th>
           <th scope="col">Ciudadano</th>
@@ -26,6 +30,14 @@ export default function TablaReportes({ reportes, desde }) {
                 {r.titulo}
               </Link>
               {r.direccion && <span className="tabla-reportes__direccion">{r.direccion}</span>}
+            </td>
+            <td data-etiqueta="Urgencia">{r.urgencia ? <UrgenciaReporte urgencia={r.urgencia} prefijo="" /> : '—'}</td>
+            <td data-etiqueta="Lugar">
+              <div>
+                <span className={r.municipio ? undefined : 'texto-suave'}>{nombreMunicipio(r)}</span>
+                {r.vereda && <span className="tabla-reportes__direccion">Vereda {r.vereda}</span>}
+                {r.zona && <span className="tabla-reportes__direccion">Zona {nombreZona(r.zona)}</span>}
+              </div>
             </td>
             <td data-etiqueta="Categoría">{r.categoria ?? '—'}</td>
             <td data-etiqueta="Estado">

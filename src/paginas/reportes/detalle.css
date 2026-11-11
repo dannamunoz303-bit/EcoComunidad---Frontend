@@ -401,3 +401,10 @@
   justify-items: start;
   gap: var(--espacio-3);
 }
+
+/* Estado y urgencia del reporte, juntos junto al título */
+.detalle__etiquetas {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--espacio-2);
+}

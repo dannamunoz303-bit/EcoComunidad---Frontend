@@ -2,11 +2,13 @@ import cliente from './cliente.js'
 import { todosLosResultados } from './paginacion.js'
 
 // Usuarios vistos por el administrador: { id, nombre, apellido, cedula, correo, telefono,
-// rol, estado, bloqueado_hasta, fecha_registro }. La cédula no se muestra donde no hace falta.
-export async function listarUsuarios({ rol, estado } = {}) {
+// rol, zona ({ id, nombre } o null), estado, bloqueado_hasta, fecha_registro }.
+// La cédula no se muestra donde no hace falta. `zona` (id) filtra por zona (RN-24).
+export async function listarUsuarios({ rol, estado, zona } = {}) {
   const params = {}
   if (rol) params.rol = rol
   if (estado) params.estado = estado
+  if (zona) params.zona = zona
   const { data } = await cliente.get('/usuarios/', { params })
   return todosLosResultados(data)
 }
@@ -16,14 +18,16 @@ export async function obtenerUsuario(id) {
   return data
 }
 
-// Crea un gestor o un administrador (RN-01): { nombre, apellido, cedula, correo, password, telefono, rol }.
+// Crea un gestor o un administrador (RN-01): { nombre, apellido, cedula, correo, password, telefono, rol, zona }.
 // La cédula es obligatoria para el gestor (RN-02); la contraseña pasa por los validadores de Django (RN-03).
+// zona (id) es obligatoria para el gestor y no se envía para el administrador (RN-24).
 export async function crearUsuario(datos) {
   const { data } = await cliente.post('/usuarios/', datos)
   return data
 }
 
-// Solo nombre, apellido, cedula, correo y telefono; rol, estado y contraseña no se cambian.
+// Solo nombre, apellido, cedula, correo, telefono y, del gestor, zona (id, RN-24);
+// rol, estado y contraseña no se cambian.
 export async function editarUsuario(id, cambios) {
   const { data } = await cliente.patch(`/usuarios/${id}/`, cambios)
   return data

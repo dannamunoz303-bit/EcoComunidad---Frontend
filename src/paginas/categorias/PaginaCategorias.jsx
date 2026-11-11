@@ -6,6 +6,7 @@ import { listarReportes } from '../../api/reportes.js'
 import EstadoCategoria from '../../componentes/EstadoCategoria.jsx'
 import { useAvisos } from '../../componentes/avisos/useAvisos.js'
 import IconoEstado from '../../componentes/IconoEstado.jsx'
+import UrgenciaReporte from '../../componentes/UrgenciaReporte.jsx'
 import { useCarga } from '../../utilidades/useCarga.js'
 import DialogoConfirmar from '../reportes/acciones/DialogoConfirmar.jsx'
 import DialogoCategoria from './DialogoCategoria.jsx'
@@ -59,6 +60,14 @@ function TarjetaCategoria({ categoria, reportes, alEditar, alCambiarEstado }) {
       ) : (
         <p className="tarjeta-categoria__descripcion texto-suave">Sin descripción.</p>
       )}
+      <p className="tarjeta-categoria__urgencia">
+        <span>Urgencia sugerida</span>
+        {categoria.urgencia_sugerida ? (
+          <UrgenciaReporte urgencia={categoria.urgencia_sugerida} prefijo="" />
+        ) : (
+          <span className="texto-suave">—</span>
+        )}
+      </p>
       <p className="tarjeta-categoria__reportes">{reportes === undefined ? '—' : textoReportes(reportes)}</p>
       <div className="tarjeta-categoria__acciones">
         <button type="button" className="boton-secundario" onClick={alEditar} aria-label={`Editar ${categoria.nombre}`}>

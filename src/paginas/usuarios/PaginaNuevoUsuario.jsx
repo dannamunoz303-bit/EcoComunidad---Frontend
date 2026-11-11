@@ -8,15 +8,16 @@ import Dialogo from '../../componentes/Dialogo.jsx'
 import { useAvisos } from '../../componentes/avisos/useAvisos.js'
 import { useEnvio } from '../reportes/acciones/useEnvio.js'
 import { generarContrasena } from './contrasena.js'
+import SelectorZona from './SelectorZona.jsx'
 import { copiarTexto } from './portapapeles.js'
 import '../reportes/detalle.css'
 import './usuarios.css'
 
 // Largo de cada campo en el backend (sección 4.2).
 const MAXIMOS = { nombre: 80, apellido: 80, cedula: 20, correo: 120, telefono: 20 }
-const CAMPOS = ['nombre', 'apellido', 'cedula', 'correo', 'telefono', 'password', 'rol']
+const CAMPOS = ['nombre', 'apellido', 'cedula', 'correo', 'telefono', 'password', 'rol', 'zona']
 
-const VACIO = { rol: 'gestor', nombre: '', apellido: '', cedula: '', correo: '', telefono: '', password: '' }
+const VACIO = { rol: 'gestor', zona: '', nombre: '', apellido: '', cedula: '', correo: '', telefono: '', password: '' }
 
 function DialogoCreado({ usuario, password, alCerrar }) {
   const { mostrarAviso } = useAvisos()
@@ -71,12 +72,15 @@ export default function PaginaNuevoUsuario() {
   const [valores, setValores] = useState(VACIO)
   const [verPassword, setVerPassword] = useState(false)
   const [creado, setCreado] = useState(null)
+  // El error de zona vacía se muestra al intentar crear sin elegirla (RN-24).
+  const [faltaZona, setFaltaZona] = useState(false)
   const { enviando, error, enviar } = useEnvio()
 
   const errores = erroresPorCampo(error)
   const erroresSueltos = Object.keys(errores).some((campo) => !CAMPOS.includes(campo))
   const errorGeneral = error && (Object.keys(errores).length === 0 || erroresSueltos) ? mensajeDeError(error) : null
   const esGestor = valores.rol === 'gestor'
+  const errorZona = faltaZona && !valores.zona ? 'Elige la zona que atenderá el gestor.' : errores.zona
 
   const cambiar = (campo) => (evento) => setValores((v) => ({ ...v, [campo]: evento.target.value }))
 
@@ -92,6 +96,10 @@ export default function PaginaNuevoUsuario() {
 
   async function guardar(evento) {
     evento.preventDefault()
+    if (esGestor && !valores.zona) {
+      setFaltaZona(true)
+      return
+    }
     const datos = {
       rol: valores.rol,
       nombre: valores.nombre.trim(),
@@ -102,6 +110,8 @@ export default function PaginaNuevoUsuario() {
     // Cédula (opcional para el administrador) y teléfono solo si se escribieron.
     if (valores.cedula.trim()) datos.cedula = valores.cedula.trim()
     if (valores.telefono.trim()) datos.telefono = valores.telefono.trim()
+    // Solo el gestor tiene zona (RN-24).
+    if (esGestor) datos.zona = Number(valores.zona)
     const { ok, resultado } = await enviar(() => crearUsuario(datos))
     if (ok) setCreado({ usuario: resultado, password: valores.password })
   }
@@ -144,6 +154,14 @@ export default function PaginaNuevoUsuario() {
             Los ciudadanos se registran solos desde la app.
           </p>
           {errores.rol && <p className="campo__error">{errores.rol}</p>}
+          {esGestor && (
+            <SelectorZona
+              id="usuario-zona"
+              valor={valores.zona}
+              error={errorZona}
+              alCambiar={(zona) => setValores((v) => ({ ...v, zona }))}
+            />
+          )}
         </section>
 
         <section className="detalle__seccion" aria-labelledby="titulo-datos-usuario">

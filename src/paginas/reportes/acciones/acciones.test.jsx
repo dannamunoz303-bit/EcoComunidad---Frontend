@@ -22,6 +22,7 @@ const REPORTE_BASE = {
   latitud: '4.71098600',
   longitud: '-74.07209200',
   estado: 'pendiente',
+  urgencia: 'media',
   motivo_rechazo: null,
   eliminado: false,
   fecha_creacion: '2026-10-10T09:00:00-05:00',
@@ -51,6 +52,7 @@ function abrir(cambios = {}, rutas = {}) {
       responder(c, 200, actualizar({ estado: 'rechazado', motivo_rechazo: JSON.parse(c.data).motivo_rechazo })),
     'POST /reportes/7/devolver-a-pendiente/': (c) =>
       responder(c, 200, actualizar({ estado: 'pendiente', motivo_rechazo: null })),
+    'POST /reportes/7/urgencia/': (c) => responder(c, 200, actualizar({ urgencia: JSON.parse(c.data).urgencia })),
     'DELETE /reportes/7/': (c) => {
       actualizar({ eliminado: true })
       return responder(c, 204, '')
@@ -80,12 +82,13 @@ beforeEach(() => {
 
 describe('Panel de acciones: botones por estado', () => {
   it.each([
-    ['pendiente', ['Aprobar', 'Rechazar', 'Editar', 'Eliminar']],
-    ['rechazado', ['Devolver a pendiente', 'Sancionar a Ana Pérez', 'Eliminar']],
-    ['aprobado', ['Asignar gestor', 'Editar', 'Eliminar']],
-    ['asignado', ['Sumar otro gestor', 'Editar', 'Eliminar']],
-    ['en_proceso', ['Sumar otro gestor', 'Editar', 'Eliminar']],
-    ['resuelto', ['Reabrir', 'Editar', 'Eliminar']],
+    // "Cambiar urgencia" vale en todos los estados mientras no esté eliminado (RN-25)
+    ['pendiente', ['Aprobar', 'Rechazar', 'Editar', 'Cambiar urgencia', 'Eliminar']],
+    ['rechazado', ['Devolver a pendiente', 'Sancionar a Ana Pérez', 'Cambiar urgencia', 'Eliminar']],
+    ['aprobado', ['Asignar gestor', 'Editar', 'Cambiar urgencia', 'Eliminar']],
+    ['asignado', ['Sumar otro gestor', 'Editar', 'Cambiar urgencia', 'Eliminar']],
+    ['en_proceso', ['Sumar otro gestor', 'Editar', 'Cambiar urgencia', 'Eliminar']],
+    ['resuelto', ['Reabrir', 'Editar', 'Cambiar urgencia', 'Eliminar']],
   ])('%s muestra solo sus acciones', async (estado, esperadas) => {
     abrir({ estado })
     const contenedor = await panel()
@@ -120,6 +123,48 @@ describe('Panel de acciones: botones por estado', () => {
 
     // La navegación va en una transición y la página de edición se descarga aparte
     await waitFor(() => expect(urlActual()).toBe('/reportes/7/editar'))
+  })
+})
+
+describe('Cambiar urgencia (RN-25)', () => {
+  it('elige la nueva urgencia, confirma, avisa y la etiqueta cambia de color', async () => {
+    const adaptador = abrir({ estado: 'en_proceso' })
+    const contenedor = await panel()
+    expect(screen.getByText('Urgencia media', { selector: '.urgencia' })).toHaveClass('urgencia--media')
+
+    fireEvent.click(within(contenedor).getByRole('button', { name: 'Cambiar urgencia' }))
+    const ventana = await dialogo('Cambiar urgencia')
+    const selector = within(ventana).getByLabelText('Nueva urgencia')
+    expect(within(selector).getAllByRole('option').map((o) => o.textContent)).toEqual(['Alta', 'Media', 'Baja'])
+    expect(selector).toHaveValue('media')
+    // Sin cambio no se puede confirmar
+    expect(within(ventana).getByRole('button', { name: 'Confirmar' })).toBeDisabled()
+
+    fireEvent.change(selector, { target: { value: 'alta' } })
+    fireEvent.click(within(ventana).getByRole('button', { name: 'Confirmar' }))
+
+    expect(await aviso('Urgencia cambiada a alta.')).toBeInTheDocument()
+    const envio = adaptador.mock.calls.find(([c]) => c.method === 'post' && c.url === '/reportes/7/urgencia/')[0]
+    expect(JSON.parse(envio.data)).toEqual({ urgencia: 'alta' })
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(await screen.findByText('Urgencia alta', { selector: '.urgencia' })).toHaveClass('urgencia--alta')
+  })
+
+  it('un error del backend se muestra en el diálogo sin cerrarlo', async () => {
+    abrir({}, {
+      'POST /reportes/7/urgencia/': (c) => responder(c, 400, { detail: 'No se puede cambiar la urgencia de un reporte eliminado.' }),
+    })
+    const contenedor = await panel()
+
+    fireEvent.click(within(contenedor).getByRole('button', { name: 'Cambiar urgencia' }))
+    const ventana = await dialogo('Cambiar urgencia')
+    fireEvent.change(within(ventana).getByLabelText('Nueva urgencia'), { target: { value: 'baja' } })
+    fireEvent.click(within(ventana).getByRole('button', { name: 'Confirmar' }))
+
+    expect(await within(ventana).findByRole('alert')).toHaveTextContent(
+      'No se puede cambiar la urgencia de un reporte eliminado.',
+    )
+    expect(screen.getByRole('dialog', { name: 'Cambiar urgencia' })).toBeInTheDocument()
   })
 })
 

@@ -12,13 +12,19 @@ vi.mock('leaflet', () => ({ default: { divIcon: (opciones) => opciones } }))
 
 // GET /api/usuarios/?rol=gestor (UsuarioAdminSerializer). Incluye un inactivo para
 // comprobar que el diálogo solo ofrece activos aunque llegue alguno de más.
+// Cada gestor tiene su zona (RN-24).
+const NORTE = { id: 1, nombre: 'norte' }
+const CENTRO = { id: 2, nombre: 'centro' }
+const SUR = { id: 3, nombre: 'sur' }
 const GESTORES = [
-  { id: 40, nombre: 'Carlos', apellido: 'Ríos', cedula: '1001', rol: 'gestor', estado: 'activo' },
-  { id: 41, nombre: 'Diana', apellido: 'López', cedula: '1002', rol: 'gestor', estado: 'activo' },
-  { id: 42, nombre: 'Andrés', apellido: 'Mejía', cedula: '1003', rol: 'gestor', estado: 'activo' },
-  { id: 43, nombre: 'Beatriz', apellido: 'Gómez', cedula: '1004', rol: 'gestor', estado: 'activo' },
-  { id: 44, nombre: 'Ernesto', apellido: 'Paz', cedula: '1005', rol: 'gestor', estado: 'inactivo' },
+  { id: 40, nombre: 'Carlos', apellido: 'Ríos', cedula: '1001', rol: 'gestor', estado: 'activo', zona: CENTRO },
+  { id: 41, nombre: 'Diana', apellido: 'López', cedula: '1002', rol: 'gestor', estado: 'activo', zona: CENTRO },
+  { id: 42, nombre: 'Andrés', apellido: 'Mejía', cedula: '1003', rol: 'gestor', estado: 'activo', zona: NORTE },
+  { id: 43, nombre: 'Beatriz', apellido: 'Gómez', cedula: '1004', rol: 'gestor', estado: 'activo', zona: CENTRO },
+  { id: 44, nombre: 'Ernesto', apellido: 'Paz', cedula: '1005', rol: 'gestor', estado: 'inactivo', zona: SUR },
 ]
+// Reporte de Popayán (zona centro), para las pruebas de zona
+const EN_POPAYAN = { municipio: { id: 15, nombre: 'Popayán' }, vereda: null, zona: CENTRO }
 
 // GET /api/seguimiento/gestores/ (sección 11)
 const carga = (id, asignadas, enProceso, atrasadas = 0) => ({
@@ -72,7 +78,13 @@ function abrirDetalle({ reporte = {}, tareas, rutas = {} } = {}) {
     'GET /auth/yo/': (c) => responder(c, 200, ADMIN),
     [DETALLE]: (c) => responder(c, 200, actual),
     'GET /reportes/7/tareas/': (c) => responder(c, 200, tareasActuales),
-    'GET /usuarios/': (c) => responder(c, 200, GESTORES.filter((u) => u.rol === c.params?.rol)),
+    // ?zona= filtra por la zona del gestor, como el backend (RN-24)
+    'GET /usuarios/': (c) =>
+      responder(
+        c,
+        200,
+        GESTORES.filter((u) => u.rol === c.params?.rol && (!c.params?.zona || String(u.zona?.id) === String(c.params.zona))),
+      ),
     'GET /seguimiento/gestores/': (c) => responder(c, 200, SEGUIMIENTO),
     'POST /tareas/': (c) => {
       const { gestor } = JSON.parse(c.data)
@@ -220,7 +232,55 @@ describe('Asignar gestor', () => {
     const dialogo = await screen.findByRole('dialog', { name: 'Asignar gestor' })
 
     expect(await within(dialogo).findByText('No hay gestores activos disponibles para este reporte.')).toBeInTheDocument()
-    expect(within(dialogo).getByRole('link', { name: 'Ir a usuarios' })).toHaveAttribute('href', '/usuarios')
+    expect(within(dialogo).getByRole('link', { name: 'Ir a usuarios' })).toHaveAttribute('href', '/usuarios?rol=gestor')
+  })
+
+  it('con municipio, pide y ofrece solo los gestores de la zona del reporte', async () => {
+    const adaptador = abrirDetalle({ reporte: { estado: 'aprobado', ...EN_POPAYAN }, tareas: [] })
+    const contenedor = await panel()
+
+    fireEvent.click(await within(contenedor).findByRole('button', { name: 'Asignar gestor' }))
+    const dialogo = await screen.findByRole('dialog', { name: 'Asignar gestor' })
+    await within(dialogo).findAllByRole('radio')
+
+    // Andrés es de la zona norte: no aparece
+    expect(opcionesDelDialogo(dialogo)).toEqual(['Diana López', 'Beatriz Gómez', 'Carlos Ríos'])
+    expect(within(dialogo).getByText('Solo gestores de la zona Centro, la zona del reporte.')).toBeInTheDocument()
+    const pedido = adaptador.mock.calls.find(([c]) => c.url === '/usuarios/')[0]
+    expect(pedido.params).toEqual({ rol: 'gestor', estado: 'activo', zona: 2 })
+  })
+
+  it('si la zona del reporte no tiene gestores activos, lo dice claramente', async () => {
+    abrirDetalle({ reporte: { estado: 'aprobado', municipio: { id: 30, nombre: 'Patía' }, zona: SUR }, tareas: [] })
+    const contenedor = await panel()
+
+    fireEvent.click(await within(contenedor).findByRole('button', { name: 'Asignar gestor' }))
+    const dialogo = await screen.findByRole('dialog', { name: 'Asignar gestor' })
+
+    expect(
+      await within(dialogo).findByText(
+        'No hay gestores activos en la zona Sur. Crea un gestor de esta zona o cambia la zona de uno desde Usuarios.',
+      ),
+    ).toBeInTheDocument()
+    expect(within(dialogo).queryAllByRole('radio')).toEqual([])
+    expect(within(dialogo).getByRole('button', { name: 'Asignar' })).toBeDisabled()
+  })
+
+  it('sin municipio (reporte anterior), ofrece los gestores de todas las zonas y muestra la de cada uno', async () => {
+    const adaptador = abrirDetalle({ reporte: { estado: 'aprobado', municipio: null, zona: null }, tareas: [] })
+    const contenedor = await panel()
+
+    fireEvent.click(await within(contenedor).findByRole('button', { name: 'Asignar gestor' }))
+    const dialogo = await screen.findByRole('dialog', { name: 'Asignar gestor' })
+    await within(dialogo).findAllByRole('radio')
+
+    expect(opcionesDelDialogo(dialogo)).toEqual(['Diana López', 'Beatriz Gómez', 'Carlos Ríos', 'Andrés Mejía'])
+    expect(within(dialogo).getByRole('radio', { name: /Andrés Mejía/ }).closest('label')).toHaveTextContent('Zona Norte')
+    expect(
+      within(dialogo).getByText('Este reporte no tiene municipio: se muestran los gestores de todas las zonas.'),
+    ).toBeInTheDocument()
+    const pedido = adaptador.mock.calls.find(([c]) => c.url === '/usuarios/')[0]
+    expect(pedido.params).not.toHaveProperty('zona')
   })
 })
 
@@ -280,11 +340,26 @@ describe('Reasignar y cancelar', () => {
 })
 
 describe('Página /tareas', () => {
+  // El reporte de cada tarea trae urgencia, municipio, vereda y zona (ReporteTareaSerializer)
+  const LUGARES = {
+    1: { urgencia: 'alta', municipio: { id: 15, nombre: 'Popayán' }, vereda: null, zona: CENTRO },
+    2: { urgencia: 'media', municipio: { id: 5, nombre: 'Caloto' }, vereda: 'El Palo', zona: NORTE },
+    3: { urgencia: 'baja', municipio: { id: 30, nombre: 'Patía' }, vereda: null, zona: SUR },
+    // Reporte anterior a RN-23
+    4: { urgencia: 'media', municipio: null, vereda: null, zona: null },
+    5: { urgencia: 'alta', municipio: { id: 15, nombre: 'Popayán' }, vereda: null, zona: CENTRO },
+  }
   const lista = (id, gestorId, estado, horas) => {
     const g = GESTORES.find((x) => x.id === gestorId)
     return {
       id,
-      reporte: { id: id + 100, titulo: `Reporte de la tarea ${id}`, categoria: 'Basura', estado: 'asignado' },
+      reporte: {
+        id: id + 100,
+        titulo: `Reporte de la tarea ${id}`,
+        categoria: 'Basura',
+        estado: 'asignado',
+        ...LUGARES[id],
+      },
       gestor: { id: g.id, nombre: g.nombre, apellido: g.apellido },
       asignado_por: { id: 1, nombre: 'Laura', apellido: 'Gómez' },
       estado,
@@ -340,6 +415,41 @@ describe('Página /tareas', () => {
     const fila = screen.getByRole('link', { name: 'Reporte de la tarea 2' }).closest('tr')
     expect(fila).toHaveTextContent('Diana López')
     expect(within(fila).getByText('En proceso')).toHaveClass('estado-tarea--en_proceso')
+  })
+
+  it('cada fila muestra la urgencia del reporte con su color y el municipio y la zona', async () => {
+    abrirTareas()
+    await tabla()
+    const celda = (n, etiqueta) =>
+      screen.getByRole('link', { name: `Reporte de la tarea ${n}` }).closest('tr').querySelector(`[data-etiqueta="${etiqueta}"]`)
+
+    expect(screen.getByRole('columnheader', { name: 'Urgencia' })).toBeInTheDocument()
+    expect(screen.getByRole('columnheader', { name: 'Lugar' })).toBeInTheDocument()
+    expect(within(celda(1, 'Urgencia')).getByText('Alta')).toHaveClass('urgencia--alta')
+    expect(within(celda(2, 'Urgencia')).getByText('Media')).toHaveClass('urgencia--media')
+    expect(within(celda(3, 'Urgencia')).getByText('Baja')).toHaveClass('urgencia--baja')
+    expect(celda(1, 'Lugar')).toHaveTextContent('PopayánZona Centro')
+    expect(celda(2, 'Lugar')).toHaveTextContent('CalotoZona Norte')
+    expect(celda(3, 'Lugar')).toHaveTextContent('PatíaZona Sur')
+  })
+
+  it('una tarea de un reporte sin municipio muestra "Sin municipio" sin romperse', async () => {
+    abrirTareas()
+    await tabla()
+    const fila = screen.getByRole('link', { name: 'Reporte de la tarea 4' }).closest('tr')
+
+    expect(fila.querySelector('[data-etiqueta="Lugar"]')).toHaveTextContent(/^Sin municipio$/)
+    expect(within(fila).getByText('Media')).toHaveClass('urgencia--media')
+  })
+
+  it('si el reporte de la tarea no trae urgencia ni lugar, muestra guiones', async () => {
+    const sinDatos = { ...TAREAS[0], reporte: { id: 101, titulo: 'Reporte de la tarea 1', categoria: 'Basura' } }
+    abrirTareas('/tareas', { 'GET /tareas/': (c) => responder(c, 200, [sinDatos]) })
+    await tabla()
+    const fila = screen.getByRole('link', { name: 'Reporte de la tarea 1' }).closest('tr')
+
+    expect(fila.querySelector('[data-etiqueta="Urgencia"]')).toHaveTextContent('—')
+    expect(fila.querySelector('[data-etiqueta="Lugar"]')).toHaveTextContent('Sin municipio')
   })
 
   it('filtra por estado y gestor leyendo la URL, y los escribe al cambiar', async () => {

@@ -1,7 +1,8 @@
 import { RefreshCw, Search } from 'lucide-react'
-import { useId, useMemo, useState } from 'react'
+import { useCallback, useId, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Dialogo from '../../componentes/Dialogo.jsx'
+import { nombreZona } from '../../utilidades/territorio.js'
 import { useCarga } from '../../utilidades/useCarga.js'
 import ErrorAccion from '../reportes/acciones/ErrorAccion.jsx'
 import { useEnvio } from '../reportes/acciones/useEnvio.js'
@@ -19,17 +20,23 @@ const textoAtrasadas = (n) => `${n} ${n === 1 ? 'atrasada' : 'atrasadas'}`
 
 // Diálogo para asignar o reasignar. `excluir`: ids de gestores que no se pueden elegir
 // (los que ya tienen una tarea activa en el reporte y, al reasignar, el actual).
+// `zona`: la zona del reporte ({ id, nombre }); solo se ofrecen sus gestores (RN-24).
+// Si es null (reporte sin municipio), se ofrecen todos.
 // accion(gestor) hace la petición; alTerminar(gestor, resultado) se llama si sale bien.
 export default function DialogoElegirGestor({
   titulo,
   textoBoton,
   textoEnviando,
   excluir = [],
+  zona = null,
   accion,
   alCerrar,
   alTerminar,
 }) {
-  const gestores = useCarga(cargarGestoresActivos)
+  const zonaId = zona?.id ?? null
+  const cargar = useCallback(() => cargarGestoresActivos(zonaId), [zonaId])
+  const gestores = useCarga(cargar)
+  const textoZona = nombreZona(zona)
   const [texto, setTexto] = useState('')
   const [elegidoId, setElegidoId] = useState(null)
   const { enviando, error, enviar } = useEnvio()
@@ -75,10 +82,15 @@ export default function DialogoElegirGestor({
       </div>
     )
   } else if (disponibles.length === 0) {
+    const hayEnLaZona = (gestores.datos ?? []).length > 0
     contenido = (
-      <div className="lista-gestores__vacia">
-        <p>No hay gestores activos disponibles para este reporte.</p>
-        <Link to="/usuarios">Ir a usuarios</Link>
+      <div className="lista-gestores__vacia" role="status">
+        <p>
+          {textoZona && !hayEnLaZona
+            ? `No hay gestores activos en la zona ${textoZona}. Crea un gestor de esta zona o cambia la zona de uno desde Usuarios.`
+            : 'No hay gestores activos disponibles para este reporte.'}
+        </p>
+        <Link to="/usuarios?rol=gestor">Ir a usuarios</Link>
       </div>
     )
   } else {
@@ -114,6 +126,7 @@ export default function DialogoElegirGestor({
                 <span className="opcion-gestor__nombre">
                   {g.nombre} {g.apellido}
                 </span>
+                {!zonaId && g.zona && <span className="opcion-gestor__zona">Zona {nombreZona(g.zona)}</span>}
                 <span className="opcion-gestor__carga">
                   {g.activas !== null && <span className="carga-gestor">{textoActivas(g.activas)}</span>}
                   {g.atrasadas > 0 && (
@@ -131,6 +144,13 @@ export default function DialogoElegirGestor({
     )
   }
 
+  // Qué gestores se ofrecen y por qué (RN-24).
+  const notaZona = gestores.cargando
+    ? null
+    : textoZona
+      ? `Solo gestores de la zona ${textoZona}, la zona del reporte.`
+      : 'Este reporte no tiene municipio: se muestran los gestores de todas las zonas.'
+
   return (
     <Dialogo
       titulo={titulo}
@@ -147,6 +167,7 @@ export default function DialogoElegirGestor({
         </>
       }
     >
+      {notaZona && <p className="lista-gestores__zona">{notaZona}</p>}
       {contenido}
       <ErrorAccion error={error} />
     </Dialogo>

@@ -3,15 +3,24 @@ import { useCallback, useMemo } from 'react'
 import { useLocation, useSearchParams } from 'react-router-dom'
 import { listarCategorias } from '../../api/categorias.js'
 import { listarReportes } from '../../api/reportes.js'
+import { listarZonas } from '../../api/territorio.js'
 import { obtenerUsuario } from '../../api/usuarios.js'
 import IconoEstado from '../../componentes/IconoEstado.jsx'
 import { useCarga } from '../../utilidades/useCarga.js'
 import FiltrosReportes from './FiltrosReportes.jsx'
-import { contarPorEstado, filtrarBase, hayFiltros, leerFiltros, ordenarRecientes } from './filtros.js'
+import { contarPorEstado, filtrarBase, hayFiltros, leerFiltros } from './filtros.js'
 import TablaReportes from './TablaReportes.jsx'
 import './reportes.css'
 
-const PARAMETROS = { estado: 'estado', categoria: 'categoria', q: 'q', eliminados: 'eliminados', ciudadano: 'ciudadano' }
+const PARAMETROS = {
+  estado: 'estado',
+  categoria: 'categoria',
+  urgencia: 'urgencia',
+  zona: 'zona',
+  q: 'q',
+  eliminados: 'eliminados',
+  ciudadano: 'ciudadano',
+}
 
 function SiluetasFilas() {
   return (
@@ -34,11 +43,15 @@ export default function PaginaReportes() {
   const { search } = useLocation()
   const filtros = leerFiltros(params)
 
-  // La categoría se filtra en el backend; el estado, el texto y los eliminados, aquí,
-  // para poder mostrar la cantidad de cada estado.
-  const cargarReportes = useCallback(() => listarReportes({ categoria: filtros.categoria }), [filtros.categoria])
+  // La categoría, la urgencia y la zona se filtran en el backend; el estado, el texto y los
+  // eliminados, aquí, para poder mostrar la cantidad de cada estado.
+  const cargarReportes = useCallback(
+    () => listarReportes({ categoria: filtros.categoria, urgencia: filtros.urgencia, zona: filtros.zona }),
+    [filtros.categoria, filtros.urgencia, filtros.zona],
+  )
   const reportes = useCarga(cargarReportes)
   const categorias = useCarga(listarCategorias)
+  const zonas = useCarga(listarZonas)
 
   const alCambiar = useCallback(
     (cambios, opciones) => {
@@ -74,7 +87,8 @@ export default function PaginaReportes() {
     if (!reportes.datos) return { visibles: [], conteo: {} }
     const base = filtrarBase(reportes.datos, filtros)
     const porEstado = filtros.estado ? base.filter((r) => r.estado === filtros.estado) : base
-    return { visibles: ordenarRecientes(porEstado), conteo: contarPorEstado(base) }
+    // Se respeta el orden del backend: urgencia alta primero y luego el más antiguo (RN-25).
+    return { visibles: porEstado, conteo: contarPorEstado(base) }
   }, [reportes.datos, filtros])
 
   const categoriasOrdenadas = useMemo(
@@ -137,6 +151,7 @@ export default function PaginaReportes() {
         filtros={filtros}
         conteo={conteo}
         categorias={categoriasOrdenadas}
+        zonas={zonas.datos ?? []}
         alCambiar={alCambiar}
       />
 

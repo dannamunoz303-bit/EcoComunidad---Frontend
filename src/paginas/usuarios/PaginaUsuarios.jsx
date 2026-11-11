@@ -7,6 +7,7 @@ import Pestanas from '../../componentes/Pestanas.jsx'
 import IconoEstado from '../../componentes/IconoEstado.jsx'
 import { formatearFechaCorta } from '../../utilidades/fechas.js'
 import { useCarga } from '../../utilidades/useCarga.js'
+import { nombreZona } from '../../utilidades/territorio.js'
 import { nombreCompleto } from '../../utilidades/usuarios.js'
 import '../reportes/reportes.css'
 import './usuarios.css'
@@ -141,6 +142,7 @@ export default function PaginaUsuarios() {
             <th scope="col">Correo</th>
             <th scope="col">Cédula</th>
             <th scope="col">Teléfono</th>
+            {rol === 'gestor' && <th scope="col">Zona</th>}
             <th scope="col">Estado</th>
             <th scope="col">Registro</th>
           </tr>
@@ -156,6 +158,7 @@ export default function PaginaUsuarios() {
               </td>
               <td data-etiqueta="Cédula">{u.cedula || '—'}</td>
               <td data-etiqueta="Teléfono">{u.telefono || '—'}</td>
+              {rol === 'gestor' && <td data-etiqueta="Zona">{nombreZona(u.zona) ?? 'Sin zona'}</td>}
               <td data-etiqueta="Estado">
                 <EstadoUsuario estado={u.estado} bloqueadoHasta={u.bloqueado_hasta} />
               </td>

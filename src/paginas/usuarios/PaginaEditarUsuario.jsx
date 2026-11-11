@@ -9,15 +9,21 @@ import IconoEstado from '../../componentes/IconoEstado.jsx'
 import { useCarga } from '../../utilidades/useCarga.js'
 import { nombreCompleto } from '../../utilidades/usuarios.js'
 import { useEnvio } from '../reportes/acciones/useEnvio.js'
+import SelectorZona from './SelectorZona.jsx'
 import '../reportes/detalle.css'
 import './usuarios.css'
 
 // Lo único que el administrador puede cambiar de un usuario (RN-05) y su largo en el backend.
-const CAMPOS = ['nombre', 'apellido', 'cedula', 'correo', 'telefono']
+// La zona solo existe para el gestor (RN-24).
+const CAMPOS_TEXTO = ['nombre', 'apellido', 'cedula', 'correo', 'telefono']
+const CAMPOS = [...CAMPOS_TEXTO, 'zona']
 const MAXIMOS = { nombre: 80, apellido: 80, cedula: 20, correo: 120, telefono: 20 }
 const ROLES_CON_CEDULA = ['ciudadano', 'gestor'] // RN-02
 
-const valoresDe = (usuario) => Object.fromEntries(CAMPOS.map((campo) => [campo, usuario[campo] ?? '']))
+const valoresDe = (usuario) => ({
+  ...Object.fromEntries(CAMPOS_TEXTO.map((campo) => [campo, usuario[campo] ?? ''])),
+  zona: usuario.zona?.id ? String(usuario.zona.id) : '',
+})
 
 function FormularioUsuario({ usuario, alGuardar }) {
   const [original] = useState(() => valoresDe(usuario))
@@ -28,18 +34,25 @@ function FormularioUsuario({ usuario, alGuardar }) {
   const erroresSueltos = Object.keys(errores).some((campo) => !CAMPOS.includes(campo))
   const errorGeneral = error && (Object.keys(errores).length === 0 || erroresSueltos) ? mensajeDeError(error) : null
   const cedulaOpcional = !ROLES_CON_CEDULA.includes(usuario.rol)
+  const esGestor = usuario.rol === 'gestor'
+  // Un gestor creado antes de RN-24 puede no tener zona: hay que elegirla para guardar.
+  const faltaZona = esGestor && !valores.zona
 
   // Solo los campos que cambiaron; nunca rol, estado ni contraseña.
   const cambios = Object.fromEntries(
-    CAMPOS.filter((campo) => valores[campo].trim() !== original[campo]).map((campo) => [campo, valores[campo].trim()]),
+    CAMPOS_TEXTO.filter((campo) => valores[campo].trim() !== original[campo]).map((campo) => [
+      campo,
+      valores[campo].trim(),
+    ]),
   )
+  if (esGestor && valores.zona !== original.zona) cambios.zona = Number(valores.zona)
   const hayCambios = Object.keys(cambios).length > 0
 
   const cambiar = (campo) => (evento) => setValores((v) => ({ ...v, [campo]: evento.target.value }))
 
   async function guardar(evento) {
     evento.preventDefault()
-    if (!hayCambios) return
+    if (!hayCambios || faltaZona) return
     const { ok, resultado } = await enviar(() => editarUsuario(usuario.id, cambios))
     if (ok) alGuardar(resultado)
   }
@@ -94,13 +107,21 @@ function FormularioUsuario({ usuario, alGuardar }) {
           )}
         </div>
         {campoTexto('correo', 'Correo', 'email')}
+        {esGestor && (
+          <SelectorZona
+            id="editar-usuario-zona"
+            valor={valores.zona}
+            error={errores.zona ?? (faltaZona ? 'Este gestor no tiene zona. Elige una para guardar.' : undefined)}
+            alCambiar={(zona) => setValores((v) => ({ ...v, zona }))}
+          />
+        )}
       </section>
 
       <div className="formulario-usuario__pie">
         <Link className="boton-secundario" to={`/usuarios/${usuario.id}`}>
           Cancelar
         </Link>
-        <button type="submit" className="boton-principal" disabled={!hayCambios || enviando}>
+        <button type="submit" className="boton-principal" disabled={!hayCambios || faltaZona || enviando}>
           {enviando ? 'Guardando…' : 'Guardar cambios'}
         </button>
       </div>

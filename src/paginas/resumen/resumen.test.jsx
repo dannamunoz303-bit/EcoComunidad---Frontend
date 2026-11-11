@@ -182,8 +182,11 @@ describe('Resumen: datos', () => {
 
     fireEvent.click(screen.getByRole('link', { name: /Basura en el parque/ }))
 
-    // El detalle no está simulado en esta prueba: responde 404
-    expect(await screen.findByText('Este reporte no existe o fue borrado.')).toBeInTheDocument()
+    // El detalle no está simulado en esta prueba: responde 404.
+    // La página del detalle se descarga aparte; con toda la suite a la vez, la primera carga puede tardar.
+    expect(
+      await screen.findByText('Este reporte no existe o fue borrado.', undefined, { timeout: 10000 }),
+    ).toBeInTheDocument()
     expect(urlActual()).toBe('/reportes/12')
     expect(screen.getByRole('heading', { level: 1, name: 'Reportes' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Reportes' })).toHaveAttribute('aria-current', 'page')

@@ -15,11 +15,11 @@ const VARIANTES = [
 const TAMANOS = [96, 48, 24]
 
 const COLORES = [
-  ['verde-bosque', '#1E5A3A', 'Verde principal'],
-  ['verde-hoja', '#3E9B63', 'Acentos, gráficas'],
-  ['verde-musgo', '#3B7A55', 'Texto suave, "Eco"'],
-  ['verde-brote', '#A8D9B8', 'Detalles sobre verde oscuro'],
-  ['verde-medio', '#5BB37E', 'Verde medio'],
+  ['verde-bosque', '#2E6B1F', 'Verde principal'],
+  ['verde-hoja', '#5DB33C', 'Acentos, gráficas'],
+  ['verde-musgo', '#44892F', 'Texto suave, "Eco"'],
+  ['verde-brote', '#C6E8A9', 'Detalles sobre verde oscuro'],
+  ['verde-medio', '#7CC35C', 'Verde medio'],
   ['fondo', '#F3F6F1', 'Fondo de la app'],
   ['superficie', '#FFFFFF', 'Tarjetas'],
   ['borde', '#DCE5DF', 'Bordes'],

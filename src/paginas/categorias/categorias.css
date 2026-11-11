@@ -18,7 +18,7 @@
 
 .tarjeta-categoria {
   display: grid;
-  grid-template-rows: auto 1fr auto auto;
+  grid-template-rows: auto 1fr auto auto auto;
   gap: var(--espacio-3);
   min-width: 0;
   padding: var(--espacio-5);
@@ -79,4 +79,14 @@
 .formulario-categoria {
   display: grid;
   gap: var(--espacio-4);
+}
+
+/* Urgencia sugerida (RN-25) */
+.tarjeta-categoria__urgencia {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espacio-2);
+  color: var(--tinta-suave);
+  font-size: 0.875rem;
 }

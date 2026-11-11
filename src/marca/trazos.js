@@ -12,16 +12,16 @@ export const TRAZOS = {
 export const VARIANTES = {
   color: {
     losa: '#3A4740',
-    tallo: '#1E5A3A',
-    hojaIzquierda: '#3E9B63',
-    hojaDerecha: '#1E5A3A',
+    tallo: '#2E6B1F',
+    hojaIzquierda: '#5DB33C',
+    hojaDerecha: '#2E6B1F',
     eco: 'var(--verde-musgo)',
     comunidad: 'var(--verde-bosque)',
   },
   'sobre-verde': {
     losa: '#CFD8D2',
     tallo: '#FFFFFF',
-    hojaIzquierda: '#A8D9B8',
+    hojaIzquierda: '#C6E8A9',
     hojaDerecha: '#FFFFFF',
     eco: 'var(--verde-brote)',
     comunidad: '#FFFFFF',

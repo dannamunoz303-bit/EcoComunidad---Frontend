@@ -36,3 +36,11 @@
 .mapa-reporte--editable .marcador-reporte--arrastrable {
   cursor: grab;
 }
+
+/* Municipio (RN-23): buscador y lista, uno al lado del otro en pantallas anchas */
+.selector-municipio {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: var(--espacio-4);
+  align-items: start;
+}

@@ -3,11 +3,11 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { guardarSesion } from '../../api/sesion.js'
 import { ADMIN, montar, pedidos, responder, simularApi, urlActual } from '../../pruebas/apiSimulada.jsx'
 
-// GET /api/categorias/ (CategoriaSerializer): { id, nombre, descripcion, activa }
+// GET /api/categorias/ (CategoriaSerializer): { id, nombre, descripcion, activa, urgencia_sugerida }
 const CATEGORIAS = [
-  { id: 1, nombre: 'Basura', descripcion: 'Residuos acumulados en la calle.', activa: true },
-  { id: 2, nombre: 'Árboles caídos', descripcion: null, activa: true },
-  { id: 3, nombre: 'Escombros', descripcion: 'Restos de obras.', activa: false },
+  { id: 1, nombre: 'Basura', descripcion: 'Residuos acumulados en la calle.', activa: true, urgencia_sugerida: 'media' },
+  { id: 2, nombre: 'Árboles caídos', descripcion: null, activa: true, urgencia_sugerida: 'alta' },
+  { id: 3, nombre: 'Escombros', descripcion: 'Restos de obras.', activa: false, urgencia_sugerida: 'baja' },
 ]
 
 // Solo importa categoria_id y eliminado para contar
@@ -125,8 +125,60 @@ describe('Crear y editar', () => {
     fireEvent.click(crear)
 
     expect(await aviso('Categoría creada.')).toBeInTheDocument()
-    expect(cuerpo(adaptador, 'post', '/categorias/')).toEqual({ nombre: 'Ruido', descripcion: 'Contaminación auditiva.' })
+    // Sin tocar el selector, la urgencia sugerida es media (RN-25)
+    expect(cuerpo(adaptador, 'post', '/categorias/')).toEqual({
+      nombre: 'Ruido',
+      descripcion: 'Contaminación auditiva.',
+      urgencia_sugerida: 'media',
+    })
     expect(await screen.findByRole('article', { name: 'Ruido' })).toBeInTheDocument()
+  })
+
+  it('crea una categoría con urgencia sugerida alta', async () => {
+    const adaptador = abrir()
+    await screen.findByRole('article', { name: 'Basura' })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Nueva categoría' }))
+    const dialogo = await screen.findByRole('dialog', { name: 'Nueva categoría' })
+    const urgencia = within(dialogo).getByLabelText('Urgencia sugerida')
+    expect(within(urgencia).getAllByRole('option').map((o) => o.textContent)).toEqual(['Alta', 'Media', 'Baja'])
+    expect(urgencia).toHaveValue('media')
+
+    fireEvent.change(within(dialogo).getByLabelText('Nombre'), { target: { value: 'Incendio' } })
+    fireEvent.change(urgencia, { target: { value: 'alta' } })
+    fireEvent.click(within(dialogo).getByRole('button', { name: 'Crear categoría' }))
+
+    expect(await aviso('Categoría creada.')).toBeInTheDocument()
+    expect(cuerpo(adaptador, 'post', '/categorias/')).toEqual({
+      nombre: 'Incendio',
+      descripcion: '',
+      urgencia_sugerida: 'alta',
+    })
+    expect(await screen.findByRole('article', { name: 'Incendio' })).toHaveTextContent('Urgencia sugeridaAlta')
+  })
+
+  it('cada tarjeta muestra su urgencia sugerida', async () => {
+    abrir()
+    await screen.findByRole('article', { name: 'Basura' })
+    expect(tarjeta('Basura')).toHaveTextContent('Urgencia sugeridaMedia')
+    expect(tarjeta('Árboles caídos')).toHaveTextContent('Urgencia sugeridaAlta')
+    expect(tarjeta('Árboles caídos').querySelector('.urgencia--alta')).not.toBeNull()
+  })
+
+  it('editar solo la urgencia sugerida envía solo ese campo', async () => {
+    const adaptador = abrir()
+    await screen.findByRole('article', { name: 'Basura' })
+
+    fireEvent.click(within(tarjeta('Basura')).getByRole('button', { name: 'Editar Basura' }))
+    const dialogo = await screen.findByRole('dialog', { name: 'Editar categoría' })
+    const urgencia = within(dialogo).getByLabelText('Urgencia sugerida')
+    expect(urgencia).toHaveValue('media')
+    fireEvent.change(urgencia, { target: { value: 'baja' } })
+    fireEvent.click(within(dialogo).getByRole('button', { name: 'Guardar cambios' }))
+
+    await waitFor(() => expect(pedidos(adaptador, 'PATCH /categorias/1/')).toBe(1))
+    expect(cuerpo(adaptador, 'patch', '/categorias/1/')).toEqual({ urgencia_sugerida: 'baja' })
+    expect(await screen.findByRole('article', { name: 'Basura' })).toHaveTextContent('Urgencia sugeridaBaja')
   })
 
   it('un nombre repetido muestra el error del backend junto al campo', async () => {

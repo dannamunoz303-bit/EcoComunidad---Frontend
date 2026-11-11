@@ -1,13 +1,15 @@
-import { Check, Gavel, Pencil, RotateCcw, Trash2, Undo2, UserPlus, X } from 'lucide-react'
+import { Check, Gauge, Gavel, Pencil, RotateCcw, Trash2, Undo2, UserPlus, X } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { aprobarReporte, devolverAPendiente, eliminarReporte } from '../../../api/reportes.js'
 import { asignarTarea } from '../../../api/tareas.js'
 import { useAvisos } from '../../../componentes/avisos/useAvisos.js'
+import { nombreUrgencia } from '../../../utilidades/territorio.js'
 import DialogoElegirGestor from '../../tareas/DialogoElegirGestor.jsx'
 import DialogoConfirmar from './DialogoConfirmar.jsx'
 import DialogoReabrir, { AVISO_REABIERTO } from './DialogoReabrir.jsx'
 import DialogoRechazar from './DialogoRechazar.jsx'
+import DialogoUrgencia from './DialogoUrgencia.jsx'
 import './acciones.css'
 
 // Acciones válidas en cada estado (ecocomunidad.md, sección 6.1, RN-08, RN-09 y RN-17).
@@ -108,6 +110,11 @@ export default function PanelAcciones({ reporte, tareas, desde, alCambiar }) {
             Editar
           </Link>
         )}
+        {/* RN-25: en cualquier estado mientras no esté eliminado */}
+        <button type="button" className="boton-secundario" onClick={() => setAbierto('urgencia')}>
+          <Gauge size={18} aria-hidden="true" />
+          Cambiar urgencia
+        </button>
       </div>
 
       {reporte.estado === 'rechazado' && reporte.ciudadano && (
@@ -133,9 +140,20 @@ export default function PanelAcciones({ reporte, tareas, desde, alCambiar }) {
           textoBoton="Asignar"
           textoEnviando="Asignando…"
           excluir={gestoresConTareaActiva}
+          zona={reporte.zona}
           accion={(gestor) => asignarTarea(reporte.id, gestor.id)}
           alCerrar={cerrar}
           alTerminar={(gestor) => terminar(avisoAsignacion(gestor))()}
+        />
+      )}
+
+      {abierto === 'urgencia' && (
+        <DialogoUrgencia
+          reporte={reporte}
+          alCerrar={cerrar}
+          alTerminar={(_, urgencia) =>
+            terminar(`Urgencia cambiada a ${nombreUrgencia(urgencia)?.toLowerCase() ?? urgencia}.`)()
+          }
         />
       )}
 

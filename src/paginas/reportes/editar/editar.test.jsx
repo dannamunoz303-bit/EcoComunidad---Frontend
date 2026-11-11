@@ -49,6 +49,10 @@ const REPORTE = {
   latitud: '4.71098600',
   longitud: '-74.07209200',
   estado: 'aprobado',
+  urgencia: 'media',
+  municipio: { id: 15, nombre: 'Popayán' },
+  vereda: 'La Playa',
+  zona: { id: 2, nombre: 'centro' },
   motivo_rechazo: null,
   eliminado: false,
   fecha_creacion: '2026-10-10T09:00:00-05:00',
@@ -64,6 +68,19 @@ const CATEGORIAS = [
   { id: 3, nombre: 'Escombros', descripcion: '', activa: false },
 ]
 
+// GET /api/municipios/ (algunos de los 42, con su zona)
+const NORTE = { id: 1, nombre: 'norte' }
+const CENTRO = { id: 2, nombre: 'centro' }
+const SUR = { id: 3, nombre: 'sur' }
+const MUNICIPIOS = [
+  { id: 4, nombre: 'Guachené', zona: NORTE },
+  { id: 8, nombre: 'Jambaló', zona: NORTE },
+  { id: 30, nombre: 'Patía', zona: SUR },
+  { id: 12, nombre: 'Piendamó', zona: CENTRO },
+  { id: 15, nombre: 'Popayán', zona: CENTRO },
+  { id: 20, nombre: 'Santander de Quilichao', zona: NORTE },
+]
+
 const PATCH = 'PATCH /reportes/7/'
 
 function abrir(reporte = REPORTE, respuestaPatch, otrosReportes = []) {
@@ -75,6 +92,7 @@ function abrir(reporte = REPORTE, respuestaPatch, otrosReportes = []) {
     'GET /reportes/7/': (c) => responder(c, 200, reporte),
     'GET /reportes/7/tareas/': (c) => responder(c, 200, []),
     'GET /categorias/': (c) => responder(c, 200, CATEGORIAS),
+    'GET /municipios/': (c) => responder(c, 200, MUNICIPIOS),
     [PATCH]: respuestaPatch ?? ((c) => responder(c, 200, { ...reporte, ...JSON.parse(c.data) })),
   })
   montar('/reportes/7/editar')
@@ -408,5 +426,116 @@ describe('Editar reporte', () => {
 
     expect(await screen.findByText('Este reporte fue eliminado y ya no admite cambios.')).toBeInTheDocument()
     expect(screen.queryByLabelText('Título')).not.toBeInTheDocument()
+  })
+})
+
+describe('Editar reporte: municipio y vereda (RN-23)', () => {
+  const municipio = () => screen.getByRole('combobox', { name: 'Municipio' })
+  const nombresMunicipios = () =>
+    within(municipio())
+      .getAllByRole('option')
+      .filter((o) => !o.disabled)
+      .map((o) => o.textContent)
+
+  it('muestra el municipio y la vereda actuales, con los municipios agrupados por zona', async () => {
+    abrir()
+    await formulario()
+    await waitFor(() => expect(municipio()).toHaveValue('15'))
+
+    expect(screen.getByLabelText(/^Vereda o corregimiento/)).toHaveValue('La Playa')
+    expect(screen.getByLabelText(/^Vereda o corregimiento/)).toHaveAttribute('maxLength', '120')
+    expect(municipio()).toHaveAccessibleDescription('Zona Centro. La zona del reporte sale de su municipio.')
+    const grupos = [...municipio().querySelectorAll('optgroup')].map((g) => g.label)
+    expect(grupos).toEqual(['Zona Centro', 'Zona Norte', 'Zona Sur'])
+    expect(guardar()).toBeDisabled()
+  })
+
+  it('el buscador encuentra municipios sin importar tildes ni mayúsculas', async () => {
+    abrir()
+    await formulario()
+    await waitFor(() => expect(municipio()).toHaveValue('15'))
+    const buscar = screen.getByLabelText('Buscar municipio')
+
+    fireEvent.change(buscar, { target: { value: 'PIENDAMO' } })
+    // El elegido (Popayán) se conserva aunque no coincida
+    expect(nombresMunicipios()).toEqual(['Piendamó', 'Popayán'])
+
+    fireEvent.change(buscar, { target: { value: 'jambalo' } })
+    expect(nombresMunicipios()).toEqual(['Popayán', 'Jambaló'])
+
+    fireEvent.change(buscar, { target: { value: 'guachene' } })
+    expect(nombresMunicipios()).toEqual(['Popayán', 'Guachené'])
+
+    fireEvent.change(buscar, { target: { value: 'xyz' } })
+    expect(screen.getByText('Ningún municipio coincide con «xyz».')).toBeInTheDocument()
+  })
+
+  it('cambiar municipio y vereda envía el id del municipio y la vereda sin espacios', async () => {
+    const adaptador = abrir()
+    await formulario()
+    await waitFor(() => expect(municipio()).toHaveValue('15'))
+
+    fireEvent.change(screen.getByLabelText('Buscar municipio'), { target: { value: 'patia' } })
+    fireEvent.change(municipio(), { target: { value: '30' } })
+    expect(municipio()).toHaveAccessibleDescription('Zona Sur. La zona del reporte sale de su municipio.')
+    fireEvent.change(screen.getByLabelText(/^Vereda o corregimiento/), { target: { value: '  El Bordo  ' } })
+    fireEvent.click(guardar())
+
+    await waitFor(() => expect(pedidos(adaptador, PATCH)).toBe(1))
+    expect(cuerpoPatch(adaptador)).toEqual({ municipio: 30, vereda: 'El Bordo' })
+  })
+
+  it('borrar la vereda la envía vacía', async () => {
+    const adaptador = abrir()
+    await formulario()
+
+    fireEvent.change(screen.getByLabelText(/^Vereda o corregimiento/), { target: { value: '   ' } })
+    fireEvent.click(guardar())
+
+    await waitFor(() => expect(pedidos(adaptador, PATCH)).toBe(1))
+    expect(cuerpoPatch(adaptador)).toEqual({ vereda: '' })
+  })
+
+  it('un reporte viejo sin municipio pide elegir uno y no se rompe', async () => {
+    const adaptador = abrir({ ...REPORTE, municipio: null, vereda: null, zona: null })
+    await formulario()
+    await waitFor(() => expect(within(municipio()).getAllByRole('option').length).toBeGreaterThan(1))
+
+    expect(municipio()).toHaveValue('')
+    expect(screen.getByRole('option', { name: 'Sin municipio: elige uno' })).toBeDisabled()
+    expect(screen.getByLabelText(/^Vereda o corregimiento/)).toHaveValue('')
+
+    fireEvent.change(municipio(), { target: { value: '15' } })
+    fireEvent.click(guardar())
+
+    await waitFor(() => expect(pedidos(adaptador, PATCH)).toBe(1))
+    expect(cuerpoPatch(adaptador)).toEqual({ municipio: 15 })
+  })
+
+  it('el error del backend sobre el municipio se muestra junto al campo', async () => {
+    abrir(REPORTE, (c) => responder(c, 400, { municipio: ['El municipio no existe.'] }))
+    await formulario()
+    await waitFor(() => expect(municipio()).toHaveValue('15'))
+
+    fireEvent.change(municipio(), { target: { value: '12' } })
+    fireEvent.click(guardar())
+
+    expect(await screen.findByText('El municipio no existe.')).toBeInTheDocument()
+    expect(municipio()).toHaveAttribute('aria-invalid', 'true')
+  })
+
+  it('si los municipios no cargan, lo dice y deja reintentar', async () => {
+    guardarSesion({ access: 'acc-1', refresh: 'ref-1' })
+    simularApi({
+      'GET /auth/yo/': (c) => responder(c, 200, ADMIN),
+      'GET /reportes/7/': (c) => responder(c, 200, REPORTE),
+      'GET /categorias/': (c) => responder(c, 200, CATEGORIAS),
+      'GET /municipios/': (c) => responder(c, 500, {}),
+    })
+    montar('/reportes/7/editar')
+    await formulario()
+
+    expect(await screen.findByText('No pudimos cargar los municipios.')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Reintentar' })).toBeInTheDocument()
   })
 })

@@ -1,5 +1,6 @@
 import { ExternalLink, MapPinOff } from 'lucide-react'
 import { lazy, Suspense } from 'react'
+import { SIN_MUNICIPIO, nombreZona } from '../../utilidades/territorio.js'
 
 // Leaflet se carga solo cuando se abre un detalle con coordenadas.
 const MapaReporte = lazy(() => import('./MapaReporte.jsx'))
@@ -19,6 +20,18 @@ export default function UbicacionReporte({ reporte }) {
   return (
     <div className="ubicacion">
       <dl className="datos-lista">
+        <div>
+          <dt>Municipio</dt>
+          <dd className={reporte.municipio ? undefined : 'texto-suave'}>{reporte.municipio?.nombre ?? SIN_MUNICIPIO}</dd>
+        </div>
+        <div>
+          <dt>Vereda</dt>
+          <dd>{reporte.vereda || '—'}</dd>
+        </div>
+        <div>
+          <dt>Zona</dt>
+          <dd>{nombreZona(reporte.zona) ?? '—'}</dd>
+        </div>
         <div>
           <dt>Dirección</dt>
           <dd>{reporte.direccion || '—'}</dd>

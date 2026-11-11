@@ -1,11 +1,16 @@
 import cliente from './cliente.js'
 import { todosLosResultados } from './paginacion.js'
 
-// El administrador ve todos los reportes, incluidos los eliminados (RN-10).
-export async function listarReportes({ estado, categoria } = {}) {
+// El administrador ve todos los reportes, incluidos los eliminados (RN-10), ordenados por
+// urgencia (alta primero) y luego del más antiguo al más reciente (RN-25).
+// Cada reporte trae municipio ({ id, nombre } o null), vereda, zona ({ id, nombre } o null) y urgencia.
+// `zona`: id de la zona del municipio, o 'sin' para los reportes sin municipio (RN-23).
+export async function listarReportes({ estado, categoria, urgencia, zona } = {}) {
   const params = {}
   if (estado) params.estado = estado
   if (categoria) params.categoria = categoria
+  if (urgencia) params.urgencia = urgencia
+  if (zona) params.zona = zona
   const { data } = await cliente.get('/reportes/', { params })
   return todosLosResultados(data)
 }
@@ -43,8 +48,14 @@ export async function reabrirReporte(id) {
   return data
 }
 
+// RN-25: alta, media o baja, mientras el reporte no esté eliminado.
+export async function cambiarUrgencia(id, urgencia) {
+  const { data } = await cliente.post(`/reportes/${id}/urgencia/`, { urgencia })
+  return data
+}
+
 // Solo los campos que cambiaron: titulo, descripcion, categoria (id de una activa),
-// direccion, descripcion_ubicacion, latitud y longitud.
+// direccion, descripcion_ubicacion, municipio (id; no se puede quitar), vereda, latitud y longitud.
 export async function editarReporte(id, cambios) {
   const { data } = await cliente.patch(`/reportes/${id}/`, cambios)
   return data

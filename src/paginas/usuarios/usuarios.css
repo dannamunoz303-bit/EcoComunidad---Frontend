@@ -188,7 +188,9 @@
   max-width: 880px;
 }
 
-.usuario-detalle > * {
+/* Doble clase: así gana aunque detalle.css se cargue después (si no, la cabecera
+   toma el área "cabecera" y las tarjetas se ponen en columnas) */
+.usuario-detalle.usuario-detalle > * {
   grid-area: auto;
   min-width: 0;
 }

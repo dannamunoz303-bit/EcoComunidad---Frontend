@@ -3,13 +3,16 @@ import { crearCategoria, editarCategoria } from '../../api/categorias.js'
 import { erroresPorCampo } from '../../api/errores.js'
 import Campo from '../../componentes/Campo.jsx'
 import Dialogo from '../../componentes/Dialogo.jsx'
+import { URGENCIAS } from '../../utilidades/territorio.js'
 import ErrorAccion from '../reportes/acciones/ErrorAccion.jsx'
 import { useEnvio } from '../reportes/acciones/useEnvio.js'
 
 // Largos de la tabla categoria (sección 4.3).
 const MAXIMO_NOMBRE = 80
 const MAXIMO_DESCRIPCION = 255
-const CAMPOS = ['nombre', 'descripcion']
+const CAMPOS = ['nombre', 'descripcion', 'urgencia_sugerida']
+// RN-25: urgencia con la que nacen los reportes de la categoría; media por defecto.
+const URGENCIA_POR_DEFECTO = 'media'
 
 // Crear (sin `categoria`) o editar una categoría. Al editar se envía solo lo que cambió.
 export default function DialogoCategoria({ categoria = null, alCerrar, alTerminar }) {
@@ -17,6 +20,7 @@ export default function DialogoCategoria({ categoria = null, alCerrar, alTermina
   const [original] = useState(() => ({
     nombre: categoria?.nombre ?? '',
     descripcion: categoria?.descripcion ?? '',
+    urgencia_sugerida: categoria?.urgencia_sugerida ?? URGENCIA_POR_DEFECTO,
   }))
   const [valores, setValores] = useState(original)
   const { enviando, error, enviar } = useEnvio()
@@ -24,7 +28,11 @@ export default function DialogoCategoria({ categoria = null, alCerrar, alTermina
 
   const errores = erroresPorCampo(error)
   const hayOtros = error && (Object.keys(errores).length === 0 || Object.keys(errores).some((c) => !CAMPOS.includes(c)))
-  const limpios = { nombre: valores.nombre.trim(), descripcion: valores.descripcion.trim() }
+  const limpios = {
+    nombre: valores.nombre.trim(),
+    descripcion: valores.descripcion.trim(),
+    urgencia_sugerida: valores.urgencia_sugerida,
+  }
   const cambios = Object.fromEntries(CAMPOS.filter((c) => limpios[c] !== original[c]).map((c) => [c, limpios[c]]))
   const puedeEnviar = limpios.nombre !== '' && (!editando || Object.keys(cambios).length > 0)
 
@@ -92,6 +100,28 @@ export default function DialogoCategoria({ categoria = null, alCerrar, alTermina
               disabled={enviando}
               {...aria}
             />
+          )}
+        </Campo>
+        <Campo
+          id={`${idFormulario}-urgencia`}
+          etiqueta="Urgencia sugerida"
+          error={errores.urgencia_sugerida}
+          ayuda="Los reportes nuevos de esta categoría nacen con esta urgencia. El administrador la puede cambiar en cada reporte."
+        >
+          {(aria) => (
+            <select
+              id={`${idFormulario}-urgencia`}
+              value={valores.urgencia_sugerida}
+              onChange={cambiar('urgencia_sugerida')}
+              disabled={enviando}
+              {...aria}
+            >
+              {URGENCIAS.map((u) => (
+                <option key={u.valor} value={u.valor}>
+                  {u.nombre}
+                </option>
+              ))}
+            </select>
           )}
         </Campo>
       </form>
