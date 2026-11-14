@@ -12,6 +12,7 @@ import HistorialTareas from './HistorialTareas.jsx'
 import UbicacionReporte from './UbicacionReporte.jsx'
 import NovedadesDelReporte from '../novedades/NovedadesDelReporte.jsx'
 import PanelAcciones from './acciones/PanelAcciones.jsx'
+import CausanteReporte from './causante/CausanteReporte.jsx'
 import './detalle.css'
 
 const nombreCompleto = (persona) => (persona ? `${persona.nombre} ${persona.apellido}` : null)
@@ -123,6 +124,13 @@ function DetalleReporte({ reporte, tareas, desde, alCambiar }) {
             )}
           </dl>
         </Seccion>
+
+        {/* RN-27: solo si el ciudadano escribió la cédula de quien causó el daño */}
+        {reporte.causante_cedula && (
+          <Seccion id="titulo-causante" titulo="Causante del daño">
+            <CausanteReporte reporte={reporte} alCambiar={alCambiar} />
+          </Seccion>
+        )}
 
         <Seccion id="titulo-ubicacion" titulo="Ubicación">
           <UbicacionReporte reporte={reporte} />

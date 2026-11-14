@@ -2,7 +2,8 @@ import cliente from './cliente.js'
 import { todosLosResultados } from './paginacion.js'
 
 // Sanciones (sección 4.9, RN-19 a RN-21). Cada una: { id, ciudadano { id, nombre, apellido },
-// admin { id, nombre, apellido }, reporte (id o null), tipo, motivo, fecha_inicio, fecha_fin }.
+// admin { id, nombre, apellido }, reporte (id o null), tipo, motivo, por_causante, fecha_inicio, fecha_fin }.
+// por_causante es true cuando se sancionó al ciudadano por causar el daño de un reporte (RN-27).
 // No se editan ni se borran.
 
 export async function listarSanciones({ ciudadano, tipo } = {}) {

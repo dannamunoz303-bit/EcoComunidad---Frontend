@@ -7,7 +7,7 @@ import { listarUsuarios } from '../../api/usuarios.js'
 import EstadoUsuario from '../../componentes/EstadoUsuario.jsx'
 import TipoSancion from '../../componentes/TipoSancion.jsx'
 import { useAvisos } from '../../componentes/avisos/useAvisos.js'
-import { NOMBRES_TIPO_SANCION, razonSugerencia, tieneBloqueoVigente } from '../../utilidades/sanciones.js'
+import { NOMBRES_TIPO_SANCION, TIPOS_SANCION as TIPOS, razonSugerencia, tieneBloqueoVigente } from '../../utilidades/sanciones.js'
 import { useCarga } from '../../utilidades/useCarga.js'
 import { nombreCompleto } from '../../utilidades/usuarios.js'
 import DialogoConfirmar from '../reportes/acciones/DialogoConfirmar.jsx'
@@ -19,13 +19,6 @@ import './sanciones.css'
 // Largo de sancion.motivo (sección 4.9).
 const MAXIMO_MOTIVO = 255
 const MAXIMO_RESULTADOS = 8
-
-// Tipos con su efecto (RN-21; el bloqueo temporal dura 2 días, RN-20).
-const TIPOS = [
-  { valor: 'advertencia', efecto: 'No cambia su cuenta. Queda en su historial.' },
-  { valor: 'bloqueo_temporal', efecto: 'No podrá iniciar sesión durante 2 días.' },
-  { valor: 'bloqueo_permanente', efecto: 'No podrá iniciar sesión hasta que un administrador levante el bloqueo.' },
-]
 
 const NOMBRES_ESTADO_REPORTE = {
   pendiente: 'Pendiente',

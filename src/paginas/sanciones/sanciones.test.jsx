@@ -37,20 +37,22 @@ const USUARIOS = [
 ]
 
 // GET /api/sanciones/ (SancionSerializer)
-const sancion = (id, ciudadano, tipo, reporte, inicio, fin = null) => ({
+const sancion = (id, ciudadano, tipo, reporte, inicio, fin = null, porCausante = false) => ({
   id,
   ciudadano,
   admin: persona(1, 'Laura', 'Gómez'),
   reporte,
   tipo,
   motivo: `Motivo de la sanción ${id}.`,
+  por_causante: porCausante,
   fecha_inicio: inicio,
   fecha_fin: fin,
 })
 const SANCIONES = [
   sancion(1, ANA, 'advertencia', 8, hace(100)),
   sancion(2, LUIS, 'bloqueo_temporal', 9, hace(10), en(38)),
-  sancion(3, LUIS, 'advertencia', 10, hace(200)),
+  // RN-27: a Luis lo sancionaron por causar el daño del reporte 10 (de otro ciudadano)
+  sancion(3, LUIS, 'advertencia', 10, hace(200), null, true),
   sancion(4, MARTA, 'bloqueo_permanente', null, hace(50)),
   sancion(5, ANA, 'bloqueo_permanente', null, hace(20), hace(5)),
 ]
@@ -152,6 +154,18 @@ describe('Historial de sanciones', () => {
     expect(within(filas()[0]).getByRole('link', { name: 'Luis Torres' })).toHaveAttribute('href', '/usuarios/31')
     expect(await within(filas()[3]).findByRole('link', { name: 'Foto de una fiesta' })).toHaveAttribute('href', '/reportes/8')
     expect(screen.getByRole('link', { name: 'Nueva sanción' })).toHaveAttribute('href', '/sanciones/nueva')
+  })
+
+  it('distingue con una etiqueta las sanciones "Por causar el daño"', async () => {
+    abrir('/sanciones')
+    await screen.findByRole('table', { name: /Sanciones/ })
+
+    const etiquetas = screen.getAllByText('Por causar el daño')
+    expect(etiquetas).toHaveLength(1)
+    expect(etiquetas[0]).toHaveClass('sancion-causante')
+    // Es la última fila: la advertencia de Luis
+    expect(filas()[4]).toContainElement(etiquetas[0])
+    expect(within(filas()[0]).queryByText('Por causar el daño')).not.toBeInTheDocument()
   })
 
   it('filtra por tipo y por ciudadano en la URL', async () => {
@@ -378,6 +392,16 @@ describe('Sanciones en el detalle del usuario', () => {
     const tabla = await within(seccion).findByRole('table', { name: /Sanciones más recientes/ })
     expect(within(tabla).getAllByRole('row').slice(1)).toHaveLength(2)
     expect(within(seccion).getByRole('link', { name: 'Ver todas' })).toHaveAttribute('href', '/sanciones?ciudadano=31')
+  })
+
+  it('en el perfil, la sanción por causar el daño lleva su etiqueta', async () => {
+    abrir('/usuarios/31')
+
+    const seccion = await screen.findByRole('region', { name: 'Sanciones' })
+    const tabla = await within(seccion).findByRole('table', { name: /Sanciones más recientes/ })
+    const [temporal, comoCausante] = within(tabla).getAllByRole('row').slice(1)
+    expect(within(comoCausante).getByText('Por causar el daño')).toBeInTheDocument()
+    expect(within(temporal).queryByText('Por causar el daño')).not.toBeInTheDocument()
   })
 
   it('muestra como máximo 5', async () => {

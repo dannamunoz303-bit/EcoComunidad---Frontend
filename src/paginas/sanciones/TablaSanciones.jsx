@@ -27,7 +27,11 @@ export default function TablaSanciones({ sanciones, titulosReportes = {}, conCiu
               </td>
             )}
             <td data-etiqueta="Tipo">
-              <TipoSancion sancion={s} />
+              <div className="tabla-sanciones__tipo">
+                <TipoSancion sancion={s} />
+                {/* RN-27: no fue por un reporte erróneo sino por causar el daño de un reporte */}
+                {s.por_causante && <span className="estado-reporte sancion-causante">Por causar el daño</span>}
+              </div>
             </td>
             <td data-etiqueta="Motivo" className="tabla-sanciones__motivo">
               {s.motivo}

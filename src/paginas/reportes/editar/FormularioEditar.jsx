@@ -18,12 +18,13 @@ const CAMPOS = [
   'categoria',
   'municipio',
   'vereda',
+  'causante_cedula',
   'direccion',
   'descripcion_ubicacion',
   'latitud',
   'longitud',
 ]
-const MAXIMOS = { titulo: 150, vereda: 120, direccion: 255, descripcion_ubicacion: 255 }
+const MAXIMOS = { titulo: 150, vereda: 120, causante_cedula: 20, direccion: 255, descripcion_ubicacion: 255 }
 const IDS = ['categoria', 'municipio']
 
 // El backend guarda 8 decimales (RN-06).
@@ -41,6 +42,7 @@ function valoresDe(reporte) {
     // Los reportes anteriores a RN-23 pueden no tener municipio.
     municipio: reporte.municipio?.id ? String(reporte.municipio.id) : '',
     vereda: reporte.vereda ?? '',
+    causante_cedula: reporte.causante_cedula ?? '',
     direccion: reporte.direccion ?? '',
     descripcion_ubicacion: reporte.descripcion_ubicacion ?? '',
     latitud: ochoDecimales(reporte.latitud),
@@ -86,7 +88,7 @@ export default function FormularioEditar({ reporte, categorias, volver, alGuarda
   const coordenadasInvalidas = COORDENADAS.some((campo) => coordenadas[campo].error)
   // Con el valor redondeado a 8 decimales y la vereda sin espacios, para comparar y enviar.
   // Vereda vacía: el backend la guarda como null.
-  const normalizados = { ...valores, vereda: valores.vereda.trim() }
+  const normalizados = { ...valores, vereda: valores.vereda.trim(), causante_cedula: valores.causante_cedula.trim() }
   for (const campo of COORDENADAS) {
     if (coordenadas[campo].valor !== undefined) normalizados[campo] = conOchoDecimales(coordenadas[campo].valor)
   }
@@ -194,6 +196,29 @@ export default function FormularioEditar({ reporte, categorias, volver, alGuarda
               rows={5}
               value={valores.descripcion}
               onChange={cambiar('descripcion')}
+              {...aria}
+            />
+          )}
+        </Campo>
+        <Campo
+          id="editar-causante"
+          etiqueta={
+            <>
+              Cédula del causante del daño<span className="campo__opcional"> (opcional)</span>
+            </>
+          }
+          error={errores.causante_cedula}
+          ayuda="Solo la ve el administrador. Déjala vacía para quitarla. No puede ser la de quien hizo el reporte."
+        >
+          {(aria) => (
+            <input
+              id="editar-causante"
+              type="text"
+              inputMode="numeric"
+              autoComplete="off"
+              maxLength={MAXIMOS.causante_cedula}
+              value={valores.causante_cedula}
+              onChange={cambiar('causante_cedula')}
               {...aria}
             />
           )}

@@ -15,6 +15,9 @@ export async function listarReportes({ estado, categoria, urgencia, zona } = {})
   return todosLosResultados(data)
 }
 
+// El detalle, para el administrador, trae además causante_cedula y causante (RN-27):
+// null si no hay cédula, o { registrado, ciudadano { id, nombre, apellido } | null,
+// sanciones_como_causante (número) | null, sugerencia (tipo) | null }.
 export async function obtenerReporte(id) {
   const { data } = await cliente.get(`/reportes/${id}/`)
   return data
@@ -48,6 +51,14 @@ export async function reabrirReporte(id) {
   return data
 }
 
+// RN-27: sanciona al ciudadano registrado con la cédula del causante. { tipo, motivo }.
+// Responde la sanción creada (por_causante = true). Solo con el reporte aprobado, asignado,
+// en proceso o resuelto.
+export async function sancionarCausante(id, { tipo, motivo }) {
+  const { data } = await cliente.post(`/reportes/${id}/sancionar-causante/`, { tipo, motivo })
+  return data
+}
+
 // RN-25: alta, media o baja, mientras el reporte no esté eliminado.
 export async function cambiarUrgencia(id, urgencia) {
   const { data } = await cliente.post(`/reportes/${id}/urgencia/`, { urgencia })
@@ -55,7 +66,9 @@ export async function cambiarUrgencia(id, urgencia) {
 }
 
 // Solo los campos que cambiaron: titulo, descripcion, categoria (id de una activa),
-// direccion, descripcion_ubicacion, municipio (id; no se puede quitar), vereda, latitud y longitud.
+// direccion, descripcion_ubicacion, municipio (id; no se puede quitar), vereda, causante_cedula
+// (vacía la quita, RN-27), latitud y longitud. Con tareas activas, el municipio no puede pasar a
+// otra zona: el backend responde 400 con el error en "municipio" (RN-23).
 export async function editarReporte(id, cambios) {
   const { data } = await cliente.patch(`/reportes/${id}/`, cambios)
   return data

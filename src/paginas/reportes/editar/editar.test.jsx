@@ -53,6 +53,7 @@ const REPORTE = {
   municipio: { id: 15, nombre: 'Popayán' },
   vereda: 'La Playa',
   zona: { id: 2, nombre: 'centro' },
+  causante_cedula: '1061234567',
   motivo_rechazo: null,
   eliminado: false,
   fecha_creacion: '2026-10-10T09:00:00-05:00',
@@ -537,5 +538,83 @@ describe('Editar reporte: municipio y vereda (RN-23)', () => {
 
     expect(await screen.findByText('No pudimos cargar los municipios.')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Reintentar' })).toBeInTheDocument()
+  })
+})
+
+describe('Editar reporte: cédula del causante y cambio de zona', () => {
+  const cedula = () => screen.getByLabelText(/^Cédula del causante/)
+  const municipio = () => screen.getByRole('combobox', { name: 'Municipio' })
+
+  it('muestra la cédula actual y envía solo el cambio, sin espacios', async () => {
+    const adaptador = abrir()
+    await formulario()
+
+    expect(cedula()).toHaveValue('1061234567')
+    expect(cedula()).toHaveAttribute('maxLength', '20')
+    expect(cedula()).toHaveAccessibleDescription(expect.stringContaining('Solo la ve el administrador.'))
+
+    fireEvent.change(cedula(), { target: { value: ' 1069999999 ' } })
+    fireEvent.click(guardar())
+
+    await waitFor(() => expect(pedidos(adaptador, PATCH)).toBe(1))
+    expect(cuerpoPatch(adaptador)).toEqual({ causante_cedula: '1069999999' })
+  })
+
+  it('dejarla vacía la quita', async () => {
+    const adaptador = abrir()
+    await formulario()
+
+    fireEvent.change(cedula(), { target: { value: '' } })
+    fireEvent.click(guardar())
+
+    await waitFor(() => expect(pedidos(adaptador, PATCH)).toBe(1))
+    expect(cuerpoPatch(adaptador)).toEqual({ causante_cedula: '' })
+  })
+
+  it('un reporte sin cédula puede recibir una', async () => {
+    const adaptador = abrir({ ...REPORTE, causante_cedula: null })
+    await formulario()
+    expect(cedula()).toHaveValue('')
+
+    fireEvent.change(cedula(), { target: { value: '1061111111' } })
+    fireEvent.click(guardar())
+
+    await waitFor(() => expect(pedidos(adaptador, PATCH)).toBe(1))
+    expect(cuerpoPatch(adaptador)).toEqual({ causante_cedula: '1061111111' })
+  })
+
+  it('el error del backend sobre la cédula se muestra junto al campo', async () => {
+    const mensaje = 'La cédula del causante no puede ser la de quien hace el reporte.'
+    abrir(REPORTE, (c) => responder(c, 400, { causante_cedula: [mensaje] }))
+    await formulario()
+
+    fireEvent.change(cedula(), { target: { value: '52123456' } })
+    fireEvent.click(guardar())
+
+    expect(await screen.findByText(mensaje)).toBeInTheDocument()
+    expect(cedula()).toHaveAttribute('aria-invalid', 'true')
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+
+  it('si el backend rechaza el cambio a otra zona por tareas activas, el mensaje va junto al municipio', async () => {
+    const mensaje =
+      'El reporte tiene tareas activas: no se puede cambiar a un municipio de otra zona. ' +
+      'Primero cancela o termina esas tareas.'
+    const adaptador = abrir(REPORTE, (c) => responder(c, 400, { municipio: [mensaje] }))
+    await formulario()
+    await waitFor(() => expect(municipio()).toHaveValue('15'))
+
+    // Popayán (centro) → Patía (sur)
+    fireEvent.change(municipio(), { target: { value: '30' } })
+    fireEvent.click(guardar())
+
+    const error = await screen.findByText(mensaje)
+    expect(error).toHaveAttribute('id', 'editar-municipio-error')
+    expect(municipio()).toHaveAttribute('aria-invalid', 'true')
+    expect(municipio()).toHaveAccessibleDescription(expect.stringContaining('Primero cancela o termina esas tareas.'))
+    // No se repite arriba del formulario
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    expect(cuerpoPatch(adaptador)).toEqual({ municipio: 30 })
+    expect(urlActual()).toBe('/reportes/7/editar')
   })
 })

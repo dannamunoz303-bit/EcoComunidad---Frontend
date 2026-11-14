@@ -230,3 +230,37 @@
   color: var(--tinta);
   font-weight: 500;
 }
+
+/* RN-27: sanción por causar el daño de un reporte */
+.tabla-sanciones__tipo {
+  display: grid;
+  justify-items: start;
+  gap: var(--espacio-1);
+}
+
+.sancion-causante {
+  --color-estado: var(--pavimento);
+}
+
+/* Sección "Causante del daño" en el detalle del reporte */
+.causante {
+  display: grid;
+  justify-items: start;
+  gap: var(--espacio-3);
+}
+
+.causante > * {
+  max-width: 100%;
+}
+
+.causante__ayuda {
+  color: var(--tinta-suave);
+  font-size: 0.875rem;
+}
+
+.causante__no-registrado {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espacio-2);
+  color: var(--tinta-suave);
+}

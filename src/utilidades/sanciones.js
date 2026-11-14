@@ -7,6 +7,16 @@ export const NOMBRES_TIPO_SANCION = {
   bloqueo_permanente: 'Bloqueo permanente',
 }
 
+// Tipos con su efecto (RN-21; el bloqueo temporal dura 2 días, RN-20).
+export const TIPOS_SANCION = [
+  { valor: 'advertencia', efecto: 'No cambia su cuenta. Queda en su historial.' },
+  { valor: 'bloqueo_temporal', efecto: 'No podrá iniciar sesión durante 2 días.' },
+  { valor: 'bloqueo_permanente', efecto: 'No podrá iniciar sesión hasta que un administrador levante el bloqueo.' },
+]
+
+// Estados del reporte en que se puede sancionar al causante (RN-27).
+export const ESTADOS_SANCIONAR_CAUSANTE = ['aprobado', 'asignado', 'en_proceso', 'resuelto']
+
 // Igual que el backend (RN-21): permanentes sin fecha_fin y temporales que terminan en el futuro.
 export function esBloqueoVigente(sancion, ahora = Date.now()) {
   if (sancion.tipo === 'bloqueo_permanente') return !sancion.fecha_fin
@@ -35,4 +45,12 @@ export function razonSugerencia(conReporte) {
   return conReporte === 1
     ? 'Tiene 1 sanción previa por un reporte erróneo.'
     : `Tiene ${conReporte} sanciones previas por reportes erróneos.`
+}
+
+// RN-27: la escalera del causante cuenta solo sus sanciones anteriores como causante.
+export function razonSugerenciaCausante(comoCausante) {
+  if (!comoCausante) return 'No tiene sanciones previas como causante.'
+  return comoCausante === 1
+    ? 'Tiene 1 sanción previa como causante.'
+    : `Tiene ${comoCausante} sanciones previas como causante.`
 }
